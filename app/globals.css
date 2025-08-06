@@ -1,5 +1,134 @@
-@import "tailwindcss";
+@config "../tailwind.config.js";
 
+@import "tailwindcss";
+/* your global CSS after */
+
+/* Custom Cursor Styles */
+/* Removed global cursor rule to prevent hydration mismatch */
+
+/* Cursor utility classes for different states */
+
+
+.cursor-link {
+  cursor: url('/cursor/sun2_link.ani') 16 16, url('/cursor/sun2_link.cur') 16 16, pointer !important;
+}
+
+.cursor-loading {
+  cursor: url('/cursor/sun3_loading.ani') 16 16, url('/cursor/sun3_loading.cur') 16 16, wait !important;
+}
+
+.cursor-help {
+  cursor: url('/cursor/sun4_help.cur'), help !important;
+}
+
+.cursor-text {
+  cursor: url('/cursor/sun5_text.ani'), url('/cursor/sun5_text.cur'), text !important;
+}
+
+.cursor-handwriting {
+  cursor: url('/cursor/sun6_handwriting.cur'), text !important;
+}
+
+.cursor-precision {
+  cursor: url('/cursor/sun7_precision.ani'), url('/cursor/sun7_precision.cur'), crosshair !important;
+}
+
+.cursor-unavailable {
+  cursor: url('/cursor/sun8_unavailable.cur'), not-allowed !important;
+}
+
+.cursor-location {
+  cursor: url('/cursor/sun9_location.cur'), pointer !important;
+}
+
+.cursor-person {
+  cursor: url('/cursor/sun10_person.cur'), pointer !important;
+}
+
+.cursor-vertical {
+  cursor: url('/cursor/sun11_vertical.ani'), url('/cursor/sun11_vertical.cur'), ns-resize !important;
+}
+
+.cursor-horizontal {
+  cursor: url('/cursor/sun12_horizontal.ani'), url('/cursor/sun12_horizontal.cur'), ew-resize !important;
+}
+
+.cursor-diagonal1 {
+  cursor: url('/cursor/sun13_diagonal1.ani'), url('/cursor/sun13_diagonal1.cur'), nw-resize !important;
+}
+
+.cursor-diagonal2 {
+  cursor: url('/cursor/sun14_diagonal2.ani'), url('/cursor/sun14_diagonal2.cur'), ne-resize !important;
+}
+
+.cursor-move {
+  cursor: url('/cursor/sun15_move.ani'), url('/cursor/sun15_move.cur'), move !important;
+}
+
+.cursor-alternate {
+  cursor: url('/cursor/sun16_alternate.cur'), pointer !important;
+}
+
+/* Override specific element cursors to maintain functionality */
+a, button, [role="button"], input[type="submit"], input[type="button"] {
+  cursor: url('/cursor/sun3_loading.ani') 16 16, url('/cursor/sun3_loading.cur') 16 16, wait !important;
+}
+
+input[type="text"], input[type="email"], input[type="password"], textarea {
+  cursor: url('/cursor/sun3_loading.ani') 16 16, url('/cursor/sun3_loading.cur') 16 16, wait !important;
+}
+
+[disabled], .disabled {
+  cursor: url('/cursor/sun8_unavailable.cur'), not-allowed !important;
+}
+
+
+@utility bg-checker4x2 {
+  /* SVG-based checkered pattern with exactly 4 rows in 15vh */
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='checker' width='50' height='50' patternUnits='userSpaceOnUse'%3E%3Crect width='25' height='25' fill='%23000'/%3E%3Crect x='25' y='25' width='25' height='25' fill='%23000'/%3E%3Crect x='25' y='0' width='25' height='25' fill='%23fff'/%3E%3Crect x='0' y='25' width='25' height='25' fill='%23fff'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23checker)'/%3E%3C/svg%3E");
+  background-size: calc(15vh) calc(15vh);
+  will-change: background-position;
+  animation: checker-scroll-smooth 2s linear infinite;
+}
+
+@utility bg-checker4x2-reverse {
+  /* Same checkered pattern but scrolling in reverse direction - sized for 25vh */
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='checker' width='50' height='50' patternUnits='userSpaceOnUse'%3E%3Crect width='25' height='25' fill='%23000'/%3E%3Crect x='25' y='25' width='25' height='25' fill='%23000'/%3E%3Crect x='25' y='0' width='25' height='25' fill='%23fff'/%3E%3Crect x='0' y='25' width='25' height='25' fill='%23fff'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23checker)'/%3E%3C/svg%3E");
+  background-size: calc(25vh) calc(25vh);
+  will-change: background-position;
+  animation: checker-scroll-reverse-25vh 2s linear infinite;
+}
+
+@utility bg-checker6x2-reverse {
+  /* 6-row checkered pattern for bottom banner - sized for 25vh */
+  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='checker6' width='40' height='40' patternUnits='userSpaceOnUse'%3E%3Crect width='20' height='20' fill='%23000'/%3E%3Crect x='20' y='20' width='20' height='20' fill='%23000'/%3E%3Crect x='20' y='0' width='20' height='20' fill='%23fff'/%3E%3Crect x='0' y='20' width='20' height='20' fill='%23fff'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23checker6)'/%3E%3C/svg%3E");
+  background-size: calc(40vh) calc(40vh);
+  will-change: background-position;
+  animation: checker-scroll-reverse-6row 2s linear infinite;
+}
+
+/* 4. Define the keyframes it uses */
+@layer base {
+  @keyframes checker-scroll-smooth {
+    from { background-position: 0 0; }
+    to   { background-position: calc(-15vh) 0; }
+  }
+  
+  @keyframes checker-scroll-reverse {
+    from { background-position: calc(-15vh) 0; }
+    to   { background-position: 0 0; }
+  }
+  
+  @keyframes checker-scroll-reverse-25vh {
+    from { background-position: 0 0; }
+    to   { background-position: calc(25vh) 0; }
+  }
+  
+  @keyframes checker-scroll-reverse-6row {
+    from { background-position: 0 0; }
+    to   { background-position: calc(40vh) 0; }
+  }
+}
 :root {
   --background: #ffffff;
   --foreground: #171717;
