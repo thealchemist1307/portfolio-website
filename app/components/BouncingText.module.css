@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Arc Layout (Large Screens) */
+.arcContainer {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 15vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 20vh; /* Fixed height for the arc container */
+}
+
+.letterWrapper {
+  position: absolute;
+  height: 100%;
+  transform-origin: bottom center;
+  will-change: transform;
+}
+
+.arcLetter {
+  display: inline-block;
+  animation: pop-bounce 2s infinite;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 3.5rem; /* Slightly smaller to account for pixel font's larger x-height */
+  line-height: 1.2;
+  color: white;
+  transform-origin: bottom center;
+  will-change: transform;
+  /* Large shadow for large screens */
+  --shadow-offset: 2px;
+  text-shadow: calc(-1 * var(--shadow-offset)) var(--shadow-offset) #ef3550,
+               calc(-2 * var(--shadow-offset)) calc(2 * var(--shadow-offset)) #f48fb1,
+               calc(-3 * var(--shadow-offset)) calc(3 * var(--shadow-offset)) #7e57c2,
+               calc(-4 * var(--shadow-offset)) calc(4 * var(--shadow-offset)) #2196f3,
+               calc(-5 * var(--shadow-offset)) calc(5 * var(--shadow-offset)) #26c6da,
+               calc(-6 * var(--shadow-offset)) calc(6 * var(--shadow-offset)) #43a047,
+               calc(-7 * var(--shadow-offset)) calc(7 * var(--shadow-offset)) #eeff41,
+               calc(-8 * var(--shadow-offset)) calc(8 * var(--shadow-offset)) #f9a825,
+               calc(-9 * var(--shadow-offset)) calc(9 * var(--shadow-offset)) #ff5722;
+}
+
+/* Stacked Layout (Small/Medium Screens) */
+.stackedContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 2rem 0;
+  gap: 0.5rem;
+}
+
+.nameLine {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.stackedLetter {
+  display: inline-block;
+  animation: pop-bounce 1.5s infinite;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 2.5rem; /* Slightly smaller to account for pixel font's larger x-height */
+  line-height: 1.2;
+  color: white;
+  margin: 0 0.1rem;
+  will-change: transform;
+  /* Large shadow for large screens */
+  --shadow-offset: 2px;
+  text-shadow: calc(-1 * var(--shadow-offset)) var(--shadow-offset) #ef3550,
+               calc(-2 * var(--shadow-offset)) calc(2 * var(--shadow-offset)) #f48fb1,
+               calc(-3 * var(--shadow-offset)) calc(3 * var(--shadow-offset)) #7e57c2,
+               calc(-4 * var(--shadow-offset)) calc(4 * var(--shadow-offset)) #2196f3,
+               calc(-5 * var(--shadow-offset)) calc(5 * var(--shadow-offset)) #26c6da,
+               calc(-6 * var(--shadow-offset)) calc(6 * var(--shadow-offset)) #43a047,
+               calc(-7 * var(--shadow-offset)) calc(7 * var(--shadow-offset)) #eeff41,
+               calc(-8 * var(--shadow-offset)) calc(8 * var(--shadow-offset)) #f9a825,
+               calc(-9 * var(--shadow-offset)) calc(9 * var(--shadow-offset)) #ff5722;
+}
+
+/* Animation */
+@keyframes pop-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-20px) scale(1.1);
+  }
+  60% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+/* Responsive adjustments */
+/* Large screens - default styles above */
+
+/* Medium screens (768px - 1023px) */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .arcLetter, .stackedLetter {
+    --shadow-offset: 1.5px; /* Slightly smaller shadow for medium screens */
+  }
+  
+  .arcLetter {
+    font-size: 2.5rem;
+    letter-spacing: 0.8rem;
+    padding: 0 0.2rem;
+  }
+  
+  .stackedLetter {
+    font-size: 2rem;
+    letter-spacing: 0.6rem;
+    margin: 0 0.3rem;
+  }
+  
+  .nameLine:last-child {
+    margin-top: 1.5rem;
+  }
+}
+
+/* Small screens (640px - 767px) */
+@media (max-width: 767px) and (min-width: 480px) {
+  .arcLetter, .stackedLetter {
+    --shadow-offset: 1.25px; /* Smaller shadow for small screens */
+  }
+  
+  .arcLetter {
+    font-size: 2rem;
+    letter-spacing: 0.3rem; /* Reduced from 0.6rem */
+    padding: 0 0.1rem;
+  }
+  
+  .stackedLetter {
+    font-size: 1.6rem;
+    letter-spacing: 0.2rem; /* Reduced from 0.4rem */
+    margin: 0 0.15rem; /* Slightly reduced margin */
+  }
+  
+  .nameLine:last-child {
+    margin-top: 1.25rem;
+  }
+}
+
+/* Extra small screens (below 480px) */
+@media (max-width: 479px) {
+  .arcLetter, .stackedLetter {
+    --shadow-offset: 1px; /* Smallest shadow for extra small screens */
+  }
+  
+  .arcLetter {
+    font-size: 1.6rem;
+    letter-spacing: 0.2rem; /* Reduced from 0.4rem */
+    padding: 0 0.05rem;
+  }
+  
+  .stackedLetter {
+    font-size: 1.2rem;
+    letter-spacing: 0.15rem; /* Reduced from 0.3rem */
+    margin: 0 0.1rem; /* Reduced from 0.15rem */
+  }
+  
+  .stackedContainer {
+    padding: 0.8rem 0;
+  }
+  
+  .nameLine {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  
+  .nameLine:last-child {
+    margin-top: 1rem;
+  }
+}

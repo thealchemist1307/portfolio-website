@@ -1,0 +1,88 @@
+/* Container for the running character */
+.container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 120px; /* Slightly more than frame height for spacing */
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 20;
+  /* Ensure no scaling or transforms affect the sprite */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* The sprite element */
+.knightRun {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  /* Exact frame dimensions */
+  width: 86px;
+  height: 100px;
+  
+  /* Sprite sheet setup */
+  background-image: url('/Run.png');
+  background-repeat: no-repeat;
+  background-size: 602px 100px; /* Total sprite sheet size */
+  
+  /* Pixel-perfect rendering */
+  image-rendering: -moz-crisp-edges; /* Firefox */
+  image-rendering: -o-crisp-edges; /* Opera */
+  image-rendering: -webkit-optimize-contrast; /* Webkit */
+  image-rendering: crisp-edges; /* Standard */
+  image-rendering: pixelated; /* Modern browsers */
+  -ms-interpolation-mode: nearest-neighbor; /* IE */
+  
+  /* Animation */
+  animation: knightRun 0.7s steps(7) infinite;
+  background-image: url('/Run.png');
+  
+  /* Performance optimizations */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, background-position;
+  
+  /* Dead state - show death animation */
+  &.dead {
+    background-image: url('/Dead.png');
+    background-size: 516px 100px; /* 6 frames * 86px */
+    animation: knightDie 0.6s steps(5) 1 forwards;
+    transform-origin: center bottom;
+  }
+  
+  /* Ensure it stays above other elements */
+  z-index: 30;
+}
+
+@keyframes knightRun {
+  from { 
+    background-position: 0 0;
+  }
+  to { 
+    background-position: -602px 0; /* 86px × 7 frames */
+  }
+}
+
+@keyframes knightDie {
+  from { 
+    background-position: 0 0;
+  }
+  to { 
+    background-position: -430px 0; /* 5 frames * 86px (show last frame) */
+  }
+}
+
+/* Ensure no scaling or transforms interfere with the sprite */
+.knightRun::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  z-index: -1;
+}
