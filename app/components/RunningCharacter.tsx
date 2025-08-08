@@ -73,13 +73,31 @@ export default function RunningCharacter() {
     const character = characterRef.current;
     if (!container || !character) return;
 
-    const containerWidth = container.offsetWidth;
+    // Use viewport width instead of container width
+    const getViewportWidth = () => {
+      return Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    };
+    
     const characterWidth = 86; // Width of the character sprite
     let lastTimestamp = performance.now();
+    let viewportWidth = getViewportWidth();
+    
+    // Handle window resize
+    const handleResize = () => {
+      viewportWidth = getViewportWidth();
+      // Ensure character stays within bounds after resize
+      if (positionRef.current.x > viewportWidth - characterWidth) {
+        positionRef.current.x = viewportWidth - characterWidth;
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
     
     // Initialize position if coming back from death
     if (deathStateRef.current.position.x > 0 && !deathStateRef.current.isDying) {
       positionRef.current = deathStateRef.current.position;
+      // Ensure position is within viewport bounds
+      positionRef.current.x = Math.min(positionRef.current.x, viewportWidth - characterWidth);
       character.style.left = `${positionRef.current.x}px`;
       character.style.transform = `scaleX(${deathStateRef.current.direction === -1 ? -1 : 1})`;
     }
@@ -103,13 +121,14 @@ export default function RunningCharacter() {
         const movement = (speed * directionRef.current * deltaTime) / 16;
         positionRef.current.x += movement;
         
-        // Change direction when hitting container edges
-        if (positionRef.current.x > containerWidth) {
-          directionRef.current = -1;
-          character.style.transform = 'scaleX(-1)';
-        } else if (positionRef.current.x < 0) {
-          directionRef.current = 1;
-          character.style.transform = 'scaleX(1)';
+        // Instantly wrap around when hitting viewport edges
+        const scaledCharacterWidth = characterWidth * 1.75; // Account for the scale transform
+        if (positionRef.current.x > viewportWidth) {
+          // When going off right edge, instantly appear at left edge
+          positionRef.current.x = -scaledCharacterWidth + 1; // Just off left edge
+        } else if (positionRef.current.x < -scaledCharacterWidth) {
+          // When going off left edge, instantly appear at right edge
+          positionRef.current.x = viewportWidth - 1; // Just off right edge
         }
         
         // Update position
@@ -127,6 +146,7 @@ export default function RunningCharacter() {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
