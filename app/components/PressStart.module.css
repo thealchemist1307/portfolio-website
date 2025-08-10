@@ -62,20 +62,7 @@
   50%, 100% { opacity: 0; }
 }
 
-/* Hide native cursor globally when hovering PRESS START */
-:global(html.hide-cursor),
-:global(html.hide-cursor) * {
-  cursor: none !important;
-}
-/* Also hide any custom cursor overlays while hidden */
-:global(html.hide-cursor .moonCursor),
-:global(html.hide-cursor .sunCursor),
-:global(html.hide-cursor .customCursor),
-:global(html.hide-cursor [data-cursor]),
-:global(html.hide-cursor #moon-cursor),
-:global(html.hide-cursor #sun-cursor) {
-  display: none !important;
-}
+/* Global cursor-hide rules moved to app/globals.css to keep this module pure */
 
 /* Curtain reveal overlay */
 .curtain {

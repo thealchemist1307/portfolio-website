@@ -154,3 +154,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide native cursor globally when html has .hide-cursor */
+html.hide-cursor,
+html.hide-cursor * {
+  cursor: none !important;
+}
+/* Hide custom cursor overlays when cursor is hidden */
+html.hide-cursor .moonCursor,
+html.hide-cursor .sunCursor,
+html.hide-cursor .customCursor,
+html.hide-cursor [data-cursor],
+html.hide-cursor #moon-cursor,
+html.hide-cursor #sun-cursor {
+  display: none !important;
+}
