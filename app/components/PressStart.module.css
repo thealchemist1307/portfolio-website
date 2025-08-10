@@ -1,0 +1,117 @@
+/* Blinking PRESS START prompt */
+.container {
+  margin-top: 1.75rem; /* default spacing under the name */
+  pointer-events: auto; /* ensure clickable at all sizes */
+  z-index: 1000; /* keep above decorative layers */
+  display: inline-flex; /* make the wrapper size the hit area */
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem; /* enlarge hit area */
+  border-radius: 12px; /* soft radius for easier tapping */
+  background: transparent; /* don't change visual look */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (min-width: 1024px) {
+  .container {
+    /* On large screens we position via .fixedLg instead */
+    margin-top: 0;
+    transform: none;
+  }
+}
+
+/* Large-screen absolute placement between name arc and bottom banner */
+@media (min-width: 1024px) {
+  .fixedLg {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    /* Place roughly midway between name arc and banner; tweak as needed */
+    top: 58vh; /* move up/down to fine-tune */
+    pointer-events: auto; /* allow clicking PRESS START */
+    z-index: 1100; /* above most elements */
+    /* preserve enlarged hit area on large screens */
+  }
+}
+
+.prompt {
+  font-family: 'Press Start 2P', cursive;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.25), 0 0 12px rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+  line-height: 1.15;
+  animation: pressBlink 1.1s steps(2, end) infinite;
+  user-select: none;
+}
+
+/* responsive sizing */
+.small {
+  font-size: clamp(12px, 3vw, 18px);
+}
+.medium {
+  font-size: clamp(14px, 2.4vw, 20px);
+}
+.large {
+  font-size: clamp(18px, 1.4vw, 26px);
+}
+
+@keyframes pressBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Hide native cursor globally when hovering PRESS START */
+:global(html.hide-cursor),
+:global(html.hide-cursor) * {
+  cursor: none !important;
+}
+/* Also hide any custom cursor overlays while hidden */
+:global(html.hide-cursor .moonCursor),
+:global(html.hide-cursor .sunCursor),
+:global(html.hide-cursor .customCursor),
+:global(html.hide-cursor [data-cursor]),
+:global(html.hide-cursor #moon-cursor),
+:global(html.hide-cursor #sun-cursor) {
+  display: none !important;
+}
+
+/* Curtain reveal overlay */
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+.panel {
+  position: absolute;
+  top: 0;
+  height: 100vh;
+  width: 50vw;
+  background: #1f1147; /* match bg tone or a dark shade */
+}
+.leftPanel { left: 0; animation: slideLeft 900ms ease-in-out forwards; }
+.rightPanel { right: 0; animation: slideRight 900ms ease-in-out forwards; }
+
+@keyframes slideLeft {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes slideRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+/* Red screen shown after curtains move */
+.redScreen {
+  position: fixed;
+  inset: 0;
+  background: #dc2626; /* red-600 */
+  z-index: 9998;
+  opacity: 0;
+  animation: redIn 700ms ease forwards 400ms; /* start after panels begin moving */
+}
+@keyframes redIn {
+  to { opacity: 1; }
+}

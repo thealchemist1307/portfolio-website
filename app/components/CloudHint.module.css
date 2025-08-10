@@ -1,0 +1,90 @@
+/* Cloud hint styling */
+.container {
+  position: fixed;
+  /* Between left boundary (0%) and moon boundary (~40% of width) */
+  left: min(28vw, 40%);
+  /* Move the cloud up a bit */
+  top: clamp(6vh, 18vh, 24vh);
+  transform: translate(-50%, -50%);
+  z-index: 500;
+  pointer-events: none; /* don't block cursor */
+  /* Center cloud and caption under a common center */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* Fine alignment tweak for caption vs cloud's visual center */
+}
+
+/* Wrapper that defines the visual box of the cloud */
+.wrapper {
+  position: relative;
+  /* Increase cloud size further to comfortably fit two-line text */
+  width: clamp(200px, 30vw, 420px);
+  /* Expand horizontally a bit more without changing height */
+  aspect-ratio: 2.5 / 1;
+  /* Drive both cloud and text in perfect sync */
+  animation: float 3.8s ease-in-out infinite, sway 8s ease-in-out infinite;
+}
+
+.cloud {
+  width: 100%;
+  height: 100%; /* ensure background is visible; fill wrapper height */
+  background-image: url('/cloud.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25));
+}
+
+/* Overlay label container positioned over the cloud */
+.labelOverlay {
+  /* Cover entire cloud area */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end; /* bottom align text */
+  justify-content: center; /* center horizontally */
+  padding-bottom: 10%; /* small breathing room from bottom */
+  pointer-events: none;
+}
+
+.label {
+  color: #1f2937; /* slate-800 */
+  text-shadow: 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.15);
+  font-weight: 800;
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(10px, 1.8vw, 16px);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+  width: 100%; /* take whole cloud width */
+  line-height: 1.1;
+  transform: translateX(-30%);
+  /* No own animation; wrapper moves both in perfect sync */
+}
+
+/* Per-breakpoint fine tuning: adjust if needed */
+@media (max-width: 639px) {
+  .container { --caption-shift: 6%; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .container { --caption-shift: 10%; }
+}
+@media (min-width: 1024px) {
+  .container { --caption-shift: 12%; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes sway {
+  0% { filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); }
+  50% { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.28)); }
+  100% { filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); }
+}

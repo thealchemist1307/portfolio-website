@@ -10,7 +10,8 @@
 
 
 .cursor-link {
-  cursor: url('/cursor/sun2_link.ani') 16 16, url('/cursor/sun2_link.cur') 16 16, pointer !important;
+  /* Removed custom sun2_link cursor */
+  cursor: pointer !important;
 }
 
 .cursor-loading {

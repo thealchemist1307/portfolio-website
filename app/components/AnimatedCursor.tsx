@@ -24,6 +24,14 @@ export default function AnimatedCursor() {
     return isMoon ? '/cursor/moon3_loading.gif' : '/cursor/sun3_loading.gif';
   };
 
+  // Compute an initial Y position based on responsive breakpoints
+  const computeInitialY = (width: number, height: number) => {
+    // sm: <640, md: 640-1023, lg: >=1024
+    if (width >= 1024) return height * 0.5; // lg: centered
+    if (width >= 640) return height * 0.60; // md: a bit lower
+    return height * 0.65; // sm: even lower
+  };
+
   const startAnimation = (star: HTMLElement) => {
     const pulseDuration = 2000 + Math.random() * 2000;
     const spinDuration = 5000 + Math.random() * 5000;
@@ -127,8 +135,12 @@ export default function AnimatedCursor() {
   };
 
   useEffect(() => {
-    // Set initial cursor position to the center of the screen
-    setCursorPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    // Set initial cursor position responsive to screen size (lower on sm/md)
+    const initialX = window.innerWidth / 2;
+    const initialY = computeInitialY(window.innerWidth, window.innerHeight);
+    setCursorPosition({ x: initialX, y: initialY });
+    // Set initial image to ensure sun/moon state is correct before first mouse move
+    setCursorImage(getCursorImage(initialX, window.innerWidth));
 
     const starsContainer = document.createElement('div');
     starsContainer.style.position = 'fixed';
@@ -145,9 +157,25 @@ export default function AnimatedCursor() {
     initializeStars();
 
     window.addEventListener('mousemove', move);
+    // Also update initial position on resize until the user moves the mouse
+    const handleResize = () => {
+      setCursorPosition(prev => {
+        // Only adjust if the cursor hasn't been moved by the user yet (still near center X)
+        const nearCenter = Math.abs(prev.x - initialX) < 2 && Math.abs(prev.y - initialY) < 2;
+        const x = window.innerWidth / 2;
+        const y = computeInitialY(window.innerWidth, window.innerHeight);
+        if (nearCenter) {
+          setCursorImage(getCursorImage(x, window.innerWidth));
+          return { x, y };
+        }
+        return prev;
+      });
+    };
+    window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('mousemove', move);
+      window.removeEventListener('resize', handleResize);
       if (starsContainerRef.current) {
         const stars = starsContainerRef.current.childNodes;
         stars.forEach(star => {

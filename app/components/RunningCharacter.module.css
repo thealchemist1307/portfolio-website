@@ -7,14 +7,13 @@
   height: 200px; /* Increased height to accommodate larger character */
   overflow: visible;
   pointer-events: none;
-  z-index: 20;
+  z-index: 100; /* Ensure character and floating text sit above banner */
   /* Ensure no scaling or transforms affect the sprite */
   transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
-  /* Scale the entire container to make character appear larger */
+  /* Transform origin for stability */
   transform-origin: bottom center;
-  transform: scale(1.5) translateZ(0);
   margin-bottom: 20px; /* Add some space at the bottom */
 }
 
@@ -26,8 +25,12 @@
   /* Frame dimensions - keeping original size but scaling up with transform */
   width: 86px;
   height: 100px;
-  /* Scale up the character */
-  transform: scale(1.75) translateZ(0);
+  /* Ensure child elements like floating text are not clipped */
+  overflow: visible;
+  /* Medium (default) size */
+  --scale: 2.5;
+  --dir: 1;
+  transform: scale(var(--scale)) scaleX(var(--dir)) translateZ(0);
   transform-origin: bottom center;
   
   /* Sprite sheet setup */
@@ -48,7 +51,6 @@
   background-image: url('/Run.png');
   
   /* Performance optimizations */
-  transform: translateZ(0);
   backface-visibility: hidden;
   will-change: transform, background-position;
   
@@ -92,4 +94,19 @@
   bottom: 0;
   background: inherit;
   z-index: -1;
+}
+
+/* Responsive character scaling */
+@media (max-width: 639px) {
+  .knightRun {
+    /* Increase size on small screens */
+    --scale: 1.75;
+  }
+}
+
+@media (min-width: 1024px) {
+  .knightRun {
+    /* Double the medium size on large screens (2 * 1.5 = 3) */
+    --scale: 3;
+  }
 }

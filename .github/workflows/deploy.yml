@@ -1,0 +1,46 @@
+
+name: CI/CD on Self‑Hosted Runner
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        shell: bash -euxo pipefail {0}
+        run: npm ci
+
+      - name: Build Next.js App
+        shell: bash -euxo pipefail {0}
+        run: npm run build
+
+      - name: Tear down previous container
+        shell: bash -euxo pipefail {0}
+        run: docker compose down --remove-orphans || true
+
+      - name: Build and Deploy Docker container
+        shell: bash -euxo pipefail {0}
+        run: |
+          echo "::group::docker compose build"
+          docker compose build --no-cache --progress=plain
+          echo "::endgroup::"
+
+          echo "::group::docker compose up"
+          docker compose up -d
+          echo "::endgroup::"

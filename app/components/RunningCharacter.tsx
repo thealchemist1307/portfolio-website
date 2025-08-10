@@ -1,4 +1,4 @@
-"use client";
+    "use client";
 import { useEffect, useRef, useState } from 'react';
 import styles from './RunningCharacter.module.css';
 
@@ -99,7 +99,8 @@ export default function RunningCharacter() {
       // Ensure position is within viewport bounds
       positionRef.current.x = Math.min(positionRef.current.x, viewportWidth - characterWidth);
       character.style.left = `${positionRef.current.x}px`;
-      character.style.transform = `scaleX(${deathStateRef.current.direction === -1 ? -1 : 1})`;
+      // Set direction via CSS variable instead of overriding transform
+      character.style.setProperty('--dir', (deathStateRef.current.direction === -1 ? -1 : 1).toString());
     }
 
     const animate = (timestamp: number) => {
@@ -122,7 +123,11 @@ export default function RunningCharacter() {
         positionRef.current.x += movement;
         
         // Instantly wrap around when hitting viewport edges
-        const scaledCharacterWidth = characterWidth * 1.75; // Account for the scale transform
+        // Compute current scale from CSS variable so responsiveness works
+        const computed = getComputedStyle(character);
+        const scaleVar = parseFloat(computed.getPropertyValue('--scale'));
+        const effectiveScale = isNaN(scaleVar) ? 2 : scaleVar; // default medium scale
+        const scaledCharacterWidth = characterWidth * effectiveScale; // Account for the scale transform
         if (positionRef.current.x > viewportWidth) {
           // When going off right edge, instantly appear at left edge
           positionRef.current.x = -scaledCharacterWidth + 1; // Just off left edge
@@ -150,7 +155,7 @@ export default function RunningCharacter() {
     };
   }, []);
 
-  // Update character class based on state
+  // Use running sprite normally; switch to death sprite when isDead
   const characterClasses = [
     styles.knightRun,
     isDead ? styles.dead : ''
@@ -163,10 +168,43 @@ export default function RunningCharacter() {
         className={characterClasses}
         style={{
           left: '0',
-          transform: `scaleX(${directionRef.current})`,
+          // Set direction via CSS variable; CSS handles transform
+          ['--dir' as any]: directionRef.current,
           zIndex: 30
         }}
-      />
+      >
+        {isDead && (
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              // Lower the text further so it's clearly visible inside the banner
+              bottom: 'calc(100% - 28px)',
+              // Counter-scale so text stays readable regardless of character scale
+              transform: 'translateX(-50%) scale(calc(1 / var(--scale)))',
+              transformOrigin: 'bottom center',
+              pointerEvents: 'none',
+              zIndex: 999,
+              color: '#ffffff',
+              // Ensure fill color is visible even with browser text stroke handling
+              WebkitTextFillColor: '#ffffff',
+              // Use strong shadow for contrast instead of heavy stroke (which can hide fill)
+              textShadow: '0 2px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)',
+              fontWeight: 800,
+              // Responsive text size across screens (sm unchanged, md/lg smaller)
+              fontSize: 'clamp(14px, 2.2vw, 30px)',
+              padding: '2px 0.4em',
+              background: 'rgba(0,0,0,0.25)',
+              borderRadius: '4px',
+              whiteSpace: 'nowrap',
+              // Use project pixel font
+              fontFamily: "'Press Start 2P', cursive"
+            }}
+          >
+            the grind never stops
+          </div>
+        )}
+      </div>
     </div>
   );
 }
