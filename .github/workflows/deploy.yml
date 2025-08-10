@@ -3,7 +3,7 @@ name: CI/CD on Self‑Hosted Runner
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch: {}
 
 concurrency:
@@ -48,10 +48,10 @@ jobs:
       - name: Build & Deploy Docker containers
         shell: bash -euxo pipefail {0}
         run: |
-          echo "::group::docker compose build"
-          docker compose build --no-cache --progress=plain
+          echo "::group::docker compose build (web)"
+          docker compose build --no-cache --progress=plain web
           echo "::endgroup::"
 
-          echo "::group::docker compose up"
-          docker compose up -d
+          echo "::group::docker compose up (web)"
+          docker compose up -d web
           echo "::endgroup::"
