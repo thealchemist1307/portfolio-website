@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: portfolio-website:web
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    restart: unless-stopped
+
+# Notes:
+# - The Dockerfile sets ENV PORT 3001 and EXPOSE 3001.
+# - With this compose file, host and container both use port 3001.
+# - The GitHub Actions workflow runs `docker compose build` and `docker compose up -d`.

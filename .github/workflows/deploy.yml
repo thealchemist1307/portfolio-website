@@ -3,7 +3,7 @@ name: CI/CD on Self‑Hosted Runner
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   workflow_dispatch: {}
 
 concurrency:
@@ -17,24 +17,35 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Set up Node (no caching for now)
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # Install dependencies
       - name: Install dependencies
         shell: bash -euxo pipefail {0}
-        run: npm ci
+        run: |
+          echo "::group::npm ci"
+          npm ci
+          echo "::endgroup::"
 
+      # Build Next.js app
       - name: Build Next.js App
         shell: bash -euxo pipefail {0}
-        run: npm run build
+        run: |
+          echo "::group::npm run build"
+          npm run build
+          echo "::endgroup::"
 
-      - name: Tear down previous container
+      # Tear down previous stack
+      - name: Tear down previous stack
         shell: bash -euxo pipefail {0}
         run: docker compose down --remove-orphans || true
 
-      - name: Build and Deploy Docker container
+      # Build & deploy Docker containers
+      - name: Build & Deploy Docker containers
         shell: bash -euxo pipefail {0}
         run: |
           echo "::group::docker compose build"
