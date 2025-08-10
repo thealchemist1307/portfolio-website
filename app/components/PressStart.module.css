@@ -46,6 +46,13 @@
   user-select: none;
 }
 
+/* Disabled state until moon cursor is seen once */
+.disabled {
+  opacity: 0.5;
+  pointer-events: none; /* prevent clicks and hovers */
+  filter: grayscale(0.3);
+}
+
 /* responsive sizing */
 .small {
   font-size: clamp(12px, 3vw, 18px);

@@ -29,11 +29,12 @@ export default function PressStart() {
     return () => window.removeEventListener('resize', update);
   }, []);
 
-  // Render always so navigation is available regardless of moon state
+  // Enable only after moon cursor is shown at least once
 
   const sizeClass = bp === 'lg' ? styles.large : bp === 'md' ? styles.medium : styles.small;
 
   const onActivate = () => {
+    if (!seenMoonOnce) return;
     // Ensure cursor becomes visible again after we leave this page
     try { document.documentElement.classList.remove('hide-cursor'); } catch {}
     // Simple redirect to /chat for now
@@ -53,6 +54,9 @@ export default function PressStart() {
   const onHoverEnd = () => {
     try { document.documentElement.classList.remove('hide-cursor'); } catch {}
   };
+
+  // Hide completely until moon cursor has appeared once
+  if (!seenMoonOnce) return null;
 
   return (
     <div
