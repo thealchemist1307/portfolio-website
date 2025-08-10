@@ -42,16 +42,16 @@ jobs:
       # Tear down previous stack
       - name: Tear down previous stack
         shell: bash -euxo pipefail {0}
-        run: docker compose down --remove-orphans || true
+        run: docker compose -f compose.yml down --remove-orphans || true
 
       # Build & deploy Docker containers
       - name: Build & Deploy Docker containers
         shell: bash -euxo pipefail {0}
         run: |
           echo "::group::docker compose build (web)"
-          docker compose build --no-cache --progress=plain web
+          docker compose -f compose.yml build --no-cache --progress=plain web
           echo "::endgroup::"
 
           echo "::group::docker compose up (web)"
-          docker compose up -d web
+          docker compose -f compose.yml up -d web
           echo "::endgroup::"
