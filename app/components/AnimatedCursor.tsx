@@ -6,23 +6,11 @@ export default function AnimatedCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [cursorImage, setCursorImage] = useState('/cursor/sun3_loading.gif');
+  const [winWidth, setWinWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 0);
   const starsContainerRef = useRef<HTMLDivElement | null>(null);
   const isMoonActive = useRef(false);
 
-  // Dispatch cursor position updates to other components
-  const dispatchCursorUpdate = (x: number, windowWidth: number) => {
-    const isMoon = x < windowWidth * 0.4;
-    const event = new CustomEvent<{ x: number; isMoon: boolean }>('cursorPosition', {
-      detail: { x, isMoon }
-    });
-    window.dispatchEvent(event);
-    return isMoon;
-  };
-
-  const getCursorImage = (x: number, windowWidth: number) => {
-    const isMoon = dispatchCursorUpdate(x, windowWidth);
-    return isMoon ? '/cursor/moon3_loading.gif' : '/cursor/sun3_loading.gif';
-  };
+  const isMoonAt = (x: number, windowWidth: number) => x < windowWidth * 0.4;
 
   // Compute an initial Y position based on responsive breakpoints
   const computeInitialY = (width: number, height: number) => {
@@ -120,18 +108,7 @@ export default function AnimatedCursor() {
 
   const move = (e: MouseEvent) => {
     setCursorPosition({ x: e.clientX, y: e.clientY });
-    const newCursorImage = getCursorImage(e.clientX, window.innerWidth);
-    setCursorImage(newCursorImage);
-
-    const shouldBeMoon = newCursorImage.includes('moon');
-    if (shouldBeMoon !== isMoonActive.current) {
-      if (shouldBeMoon) {
-        showStars();
-      } else {
-        hideStars();
-      }
-      isMoonActive.current = shouldBeMoon;
-    }
+    setWinWidth(window.innerWidth);
   };
 
   useEffect(() => {
@@ -139,8 +116,7 @@ export default function AnimatedCursor() {
     const initialX = window.innerWidth / 2;
     const initialY = computeInitialY(window.innerWidth, window.innerHeight);
     setCursorPosition({ x: initialX, y: initialY });
-    // Set initial image to ensure sun/moon state is correct before first mouse move
-    setCursorImage(getCursorImage(initialX, window.innerWidth));
+    setWinWidth(window.innerWidth);
 
     const starsContainer = document.createElement('div');
     starsContainer.style.position = 'fixed';
@@ -159,16 +135,12 @@ export default function AnimatedCursor() {
     window.addEventListener('mousemove', move);
     // Also update initial position on resize until the user moves the mouse
     const handleResize = () => {
+      const x = window.innerWidth / 2;
+      const y = computeInitialY(window.innerWidth, window.innerHeight);
+      setWinWidth(window.innerWidth);
       setCursorPosition(prev => {
-        // Only adjust if the cursor hasn't been moved by the user yet (still near center X)
         const nearCenter = Math.abs(prev.x - initialX) < 2 && Math.abs(prev.y - initialY) < 2;
-        const x = window.innerWidth / 2;
-        const y = computeInitialY(window.innerWidth, window.innerHeight);
-        if (nearCenter) {
-          setCursorImage(getCursorImage(x, window.innerWidth));
-          return { x, y };
-        }
-        return prev;
+        return nearCenter ? { x, y } : prev;
       });
     };
     window.addEventListener('resize', handleResize);
@@ -187,6 +159,28 @@ export default function AnimatedCursor() {
       }
     };
   }, []);
+
+  // Derive image, stars visibility, and dispatch event when position/width changes
+  useEffect(() => {
+    const moon = isMoonAt(cursorPosition.x, winWidth);
+    const desiredImage = moon ? '/cursor/moon3_loading.gif' : '/cursor/sun3_loading.gif';
+    if (desiredImage !== cursorImage) setCursorImage(desiredImage);
+
+    if (moon !== isMoonActive.current) {
+      if (moon) showStars(); else hideStars();
+      isMoonActive.current = moon;
+    }
+
+    // Dispatch after paint to avoid cross-component setState during render
+    const raf = requestAnimationFrame(() => {
+      const event = new CustomEvent<{ x: number; isMoon: boolean }>('cursorPosition', {
+        detail: { x: cursorPosition.x, isMoon: moon }
+      });
+      window.dispatchEvent(event);
+    });
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cursorPosition.x, winWidth]);
 
   return (
     <div

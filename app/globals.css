@@ -133,6 +133,9 @@ input[type="text"], input[type="email"], input[type="password"], textarea {
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --border: color-mix(in oklab, var(--foreground) 15%, transparent);
+  --accent: #0ea5e9; /* default sky */
+  --accent-foreground: #ffffff;
 }
 
 @theme inline {
@@ -154,6 +157,26 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Explicit theme overrides via html classes */
+html.theme-light {
+  --background: #ffffff;
+  --foreground: #171717;
+  --border: color-mix(in oklab, #171717 15%, transparent);
+}
+html.theme-dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --border: color-mix(in oklab, #ededed 20%, transparent);
+}
+
+/* Color palettes (base accent) */
+html[data-theme-color="slate"] { --accent: #64748b; --accent-foreground: #ffffff; }
+html[data-theme-color="blue"] { --accent: #3b82f6; --accent-foreground: #ffffff; }
+html[data-theme-color="sky"] { --accent: #0ea5e9; --accent-foreground: #002b3c; }
+html[data-theme-color="violet"] { --accent: #8b5cf6; --accent-foreground: #ffffff; }
+html[data-theme-color="rose"] { --accent: #f43f5e; --accent-foreground: #ffffff; }
+html[data-theme-color="green"] { --accent: #22c55e; --accent-foreground: #052e1a; }
 
 /* Hide native cursor globally when html has .hide-cursor */
 html.hide-cursor,
