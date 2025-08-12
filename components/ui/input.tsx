@@ -19,7 +19,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         ref={ref}
         className={cn(
-          "w-full rounded-md border border-foreground/20 bg-background text-foreground placeholder:text-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+          "w-full rounded-sm border-2 border-foreground bg-background text-foreground placeholder:text-foreground/60 focus-visible:outline-none",
           sizes[inputSize],
           className
         )}

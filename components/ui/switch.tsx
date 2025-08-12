@@ -10,8 +10,8 @@ function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimi
     <SwitchPrimitive.Root
       data-slot="switch"
       className={cn(
-        // Track
-        "relative inline-flex h-[24px] w-[44px] shrink-0 items-center overflow-hidden rounded-full border border-[var(--border)] bg-foreground/10 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--border)] data-[state=checked]:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50 shadow-[inset_0_0_0_1px_var(--border)]",
+        // Larger track for better visibility and tap area
+        "relative inline-flex h-[30px] w-[56px] shrink-0 items-center overflow-hidden rounded-full border border-[var(--border)] bg-foreground/10 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--border)] data-[state=checked]:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50 shadow-[inset_0_0_0_1px_var(--border)]",
         className
       )}
       {...props}
@@ -19,8 +19,8 @@ function Switch({ className, ...props }: React.ComponentProps<typeof SwitchPrimi
       <SwitchPrimitive.Thumb
         data-slot="switch-thumb"
         className={cn(
-          // Thumb moves from 2px -> 22px
-          "pointer-events-none block h-[20px] w-[20px] translate-x-[2px] transform rounded-full bg-background transition-[transform,background-color] duration-200 ease-in-out will-change-transform data-[state=checked]:translate-x-[22px] data-[state=checked]:bg-[var(--accent-foreground)] dark:bg-foreground"
+          // Larger thumb, moves from 3px -> 29px
+          "pointer-events-none block h-[24px] w-[24px] translate-x-[3px] transform rounded-full bg-background transition-[transform,background-color] duration-200 ease-in-out will-change-transform data-[state=checked]:translate-x-[29px] data-[state=checked]:bg-[var(--accent-foreground)] dark:bg-foreground"
         )}
       />
     </SwitchPrimitive.Root>

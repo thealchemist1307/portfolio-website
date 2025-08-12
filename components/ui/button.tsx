@@ -7,14 +7,14 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const base =
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
+  "inline-flex items-center justify-center whitespace-nowrap rounded-sm text-sm font-medium transition-transform disabled:opacity-50 disabled:pointer-events-none border-2 border-foreground shadow-brutal active:translate-x-1 active:translate-y-1 active:shadow-none focus-visible:outline-none";
 
 const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
   default:
-    "bg-[var(--accent)] text-[var(--accent-foreground)] hover:opacity-90 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-[var(--background)]",
-  ghost: "bg-transparent hover:bg-foreground/10",
+    "bg-primary text-primary-foreground hover:opacity-95",
+  ghost: "bg-transparent hover:bg-secondary hover:text-secondary-foreground",
   outline:
-    "border border-[var(--border)] hover:bg-foreground/5",
+    "bg-transparent",
 };
 
 const sizes: Record<NonNullable<ButtonProps["size"]>, string> = {

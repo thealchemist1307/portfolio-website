@@ -74,7 +74,8 @@ export default function AnimatedCursor() {
       star.style.backgroundImage = `url(${starImages[Math.floor(Math.random() * starImages.length)]})`;
       star.style.backgroundSize = 'contain';
       star.style.backgroundRepeat = 'no-repeat';
-      star.style.zIndex = '999998';
+      // Ensure stars render beneath CRT overlay (which sits above at ~z-80)
+      star.style.zIndex = '60';
       star.style.pointerEvents = 'none';
       star.style.opacity = '0';
       star.style.borderRadius = '50%';
@@ -125,7 +126,8 @@ export default function AnimatedCursor() {
     starsContainer.style.width = '100%';
     starsContainer.style.height = '100%';
     starsContainer.style.pointerEvents = 'none';
-    starsContainer.style.zIndex = '999997';
+    // Stars container beneath CRT overlay
+    starsContainer.style.zIndex = '59';
     starsContainer.style.display = 'none';
     document.body.appendChild(starsContainer);
     starsContainerRef.current = starsContainer;
@@ -193,7 +195,8 @@ export default function AnimatedCursor() {
         backgroundImage: `url(${cursorImage})`,
         backgroundSize: 'cover',
         backgroundRepeat: 'no-repeat',
-        zIndex: 999999,
+        // Cursor should render beneath CRT overlay
+        zIndex: 60,
         width: '128px',
         height: '128px',
         pointerEvents: 'none',
