@@ -264,6 +264,8 @@ export default function ChatPage() {
   const [showCue, setShowCue] = useState(true);
   // Track small screens (md breakpoint)
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  // Detect touch devices for two-tap behavior on project cards
+  const [isTouch, setIsTouch] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -277,6 +279,13 @@ export default function ChatPage() {
       window.addEventListener('resize', update);
       return () => window.removeEventListener('resize', update);
     }
+  }, []);
+
+  // Identify touch-capable devices (coarse pointer or touch points)
+  useEffect(() => {
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
+    const hasTouch = 'maxTouchPoints' in navigator ? (navigator.maxTouchPoints ?? 0) > 0 : false;
+    setIsTouch(coarse || hasTouch);
   }, []);
 
   const setTheme = (mode: "light" | "dark") => {
@@ -592,12 +601,18 @@ export default function ChatPage() {
                   onFocus={() => open(i)}
                   onBlur={() => close(i)}
                   onClick={() => {
-                    if (!isOpen(i)) {
-                      open(i);
-                    } else {
-                      const url = p.live || p.repo;
+                    const url = p.live || p.repo;
+                    if (isTouch) {
+                      if (!isOpen(i)) {
+                        // On touch: first tap opens, second tap navigates
+                        open(i);
+                        return;
+                      }
                       if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                      return;
                     }
+                    // Non-touch: click navigates directly (hover shows details)
+                    if (url) window.open(url, '_blank', 'noopener,noreferrer');
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
