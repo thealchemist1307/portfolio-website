@@ -7,8 +7,7 @@
   top: clamp(6vh, 18vh, 24vh);
   transform: translate(-50%, -50%);
   z-index: 500;
-  pointer-events: none;
-  /* don't block cursor */
+  pointer-events: none; /* don't block cursor */
   /* Center cloud and caption under a common center */
   display: flex;
   flex-direction: column;
@@ -33,15 +32,13 @@
 .cloud {
   position: relative;
   width: 100%;
-  height: 100%;
-  /* ensure background is visible; fill wrapper height */
+  height: 100%; /* ensure background is visible; fill wrapper height */
   background-image: url('/cloud.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
-  z-index: 1;
-  /* cloud base below gradient, well below text */
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25));
+  z-index: 1; /* cloud base below gradient, well below text */
 }
 
 /* Soft outer glow ring that gently pulses */
@@ -50,14 +47,13 @@
   position: absolute;
   inset: -4%;
   border-radius: 9999px;
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 60%);
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.45), rgba(255,255,255,0) 60%);
   opacity: 0.75;
   filter: blur(10px);
   transform-origin: center;
   animation: cloudGlow 3.2s ease-in-out infinite;
   pointer-events: none;
-  z-index: 0;
-  /* glow at the very back */
+  z-index: 0; /* glow at the very back */
 }
 
 /* Animated RGB gradient constrained to cloud silhouette */
@@ -66,12 +62,13 @@
   position: absolute;
   inset: 0;
   background: linear-gradient(120deg,
-      rgba(255, 79, 79, 0.9),
-      rgba(255, 199, 46, 0.9),
-      rgba(88, 255, 137, 0.9),
-      rgba(88, 182, 255, 0.9),
-      rgba(163, 112, 255, 0.9),
-      rgba(255, 79, 220, 0.9));
+    rgba(255,79,79,0.9),
+    rgba(255,199,46,0.9),
+    rgba(88,255,137,0.9),
+    rgba(88,182,255,0.9),
+    rgba(163,112,255,0.9),
+    rgba(255,79,220,0.9)
+  );
   background-size: 400% 400%;
   mix-blend-mode: overlay;
   opacity: 1;
@@ -86,8 +83,7 @@
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
-  z-index: 2;
-  /* gradient above cloud image but below label */
+  z-index: 2; /* gradient above cloud image but below label */
 }
 
 /* Overlay label container positioned over the cloud */
@@ -97,27 +93,19 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  display: block;
-  /* we'll absolutely place the label itself */
+  display: block; /* we'll absolutely place the label itself */
   pointer-events: none;
-  z-index: 20;
-  /* ensure above cloud image & effects */
+  z-index: 20; /* ensure above cloud image & effects */
 }
 
 .label {
-  position: absolute;
-  /* place above the cloud */
-  top: -6%;
-  left: 50%;
-  transform: translate(-50%, 0);
-  /* Stronger animated gradient text */
-  background: linear-gradient(90deg, #06b6d4, #22c55e, #eab308, #ef4444, #8b5cf6, #06b6d4);
-  background-size: 400% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.75), 0 2px 6px rgba(0, 0, 0, 0.25);
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.4);
+  position: absolute; /* place above the cloud */
+  top: 58%;
+  left: 52%;
+  transform: translate(-50%, -50%);
+  /* Base typography for both layers */
+  color: #000; /* base black */
+  text-shadow: none;
   font-weight: 800;
   font-family: 'Press Start 2P', cursive;
   font-size: clamp(10px, 1.8vw, 16px);
@@ -125,20 +113,40 @@
   pointer-events: none;
   user-select: none;
   text-align: center;
-  width: 90%;
-  /* fit within cloud horizontally */
+  width: 90%; /* fit within cloud horizontally */
   line-height: 1.1;
-  animation: textShimmer 4.5s ease-in-out infinite;
-  z-index: 21;
-  /* above overlay container */
+  z-index: 21; /* above overlay container */
+}
+
+/* Text layering for RGB over black */
+.textWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.textBase {
+  color: #000; /* visible black base */
+}
+
+.textRGB {
+  position: absolute;
+  inset: 0;
+  /* Shimmering RGB gradient clipped to text */
+  background: linear-gradient(90deg, #06b6d4, #22c55e, #eab308, #ef4444, #8b5cf6, #06b6d4);
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Sync with cloud ::after which uses gradientShift 5s ease-in-out */
+  animation: gradientShift 5s ease-in-out infinite;
+  mix-blend-mode: screen; /* blend over black nicely */
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 /* Per-breakpoint fine tuning: adjust if needed */
 @media (max-width: 639px) {
-  .container {
-    --caption-shift: 6%;
-  }
-
+  .container { --caption-shift: 6%; }
   /* Smaller font and slight position tweak on small screens */
   .label {
     font-size: clamp(9px, 3.0vw, 12px);
@@ -146,12 +154,8 @@
     top: 60%;
   }
 }
-
 @media (min-width: 640px) and (max-width: 1023px) {
-  .container {
-    --caption-shift: 10%;
-  }
-
+  .container { --caption-shift: 10%; }
   /* Reduce font a bit and nudge position for md screens */
   .label {
     font-size: clamp(10px, 1.6vw, 14px);
@@ -159,79 +163,35 @@
     top: 59%;
   }
 }
-
 @media (min-width: 1024px) {
-  .container {
-    --caption-shift: 12%;
-  }
+  .container { --caption-shift: 12%; }
 }
 
 @keyframes float {
-  0% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-
-  100% {
-    transform: translateY(0);
-  }
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
 }
 
 @keyframes sway {
-  0% {
-    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
-  }
-
-  50% {
-    filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.28));
-  }
-
-  100% {
-    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
-  }
+  0% { filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); }
+  50% { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.28)); }
+  100% { filter: drop-shadow(0 6px 8px rgba(0,0,0,0.25)); }
 }
 
 @keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 @keyframes cloudGlow {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.55;
-  }
-
-  50% {
-    transform: scale(1.03);
-    opacity: 0.8;
-  }
+  0%, 100% { transform: scale(1); opacity: 0.55; }
+  50% { transform: scale(1.03); opacity: 0.8; }
 }
 
 @keyframes textShimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
