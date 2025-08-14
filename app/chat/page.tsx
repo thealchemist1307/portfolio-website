@@ -5,7 +5,6 @@ import { Space_Grotesk } from "next/font/google";
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], weight: ["400", "600", "700"] });
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
-import { Dialog, DialogOverlay, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // (cn not needed here)
@@ -27,7 +26,6 @@ export default function ChatPage() {
       return next;
     });
   }, []);
-
 
   // Compute bottom offset from composer height so chips sit above the textbox
   useEffect(() => {
@@ -55,18 +53,6 @@ export default function ChatPage() {
   }, []);
   // Mobile profile drawer (declare before effects that use it)
   const [profileOpen, setProfileOpen] = useState(false);
-  // Profile image modal state
-  const [photoOpen, setPhotoOpen] = useState(false);
-
-  // Close photo modal on Escape
-  useEffect(() => {
-    if (!photoOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPhotoOpen(false);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [photoOpen]);
   // Close any open cards when clicking/tapping outside or pressing Escape
   useEffect(() => {
     const handlePointerDown = (e: MouseEvent | TouchEvent) => {
@@ -99,15 +85,6 @@ export default function ChatPage() {
       return () => { document.body.style.overflow = prev; };
     }
   }, [profileOpen]);
-
-  // Auto-open the hamburger/profile drawer on EVERY visit for screens that show the hamburger (mobile only)
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)'); // same breakpoint as hamburger visibility (md:hidden)
-    if (mq.matches) {
-      // Defer to after initial paint to avoid jank
-      setTimeout(() => setProfileOpen(true), 0);
-    }
-  }, []);
   const [messages, setMessages] = useState<Message[]>([
     { id: "m1", role: "assistant", content: "Hi! How can I help you today?" },
   ]);
@@ -117,68 +94,6 @@ export default function ChatPage() {
     "What stack do you use?",
     "How can I contact you?",
   ]);
-  // Projects data
-  const projects: { title: string; repo: string; description: string; placeholder: string; live?: string }[] = [
-    {
-      title: "Shauq Homelab — Self-Hosted Ubuntu Server",
-      repo: "",
-      live: "https://home.shauqtechnology.in/",
-      description:
-        "Self-hosted on Ubuntu 22.04 with Docker Compose and Cloudflare Tunnel/Zero-Trust (no open ports). Hosts 20+ services including Jellyfin, Sonarr, Radarr, Nextcloud, Immich, Pi-hole, Nginx; tuned TLS/HTTP/2; remote HTTPS TTFB improved ~35%.",
-      placeholder:
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%23111827' width='100%25' height='100%25'/><text x='50%25' y='46%25' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='54' fill='%23A5B4FC'>Shauq Homelab</text><text x='50%25' y='60%25' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='28' fill='%23A5B4FC'>Ubuntu • Docker • Cloudflare</text></svg>",
-    },
-    {
-      title: "Algorithm Visualizer",
-      repo: "https://github.com/thealchemist1307/DAA-Assignment/tree/master",
-      live: "https://daa-assignment.vercel.app/",
-      description:
-        "Design & Analysis of Algorithms assignment site. React-based scaffold with public/src structure; simple npm install/start workflow and CodeSandbox setup.",
-      placeholder:
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%234A6CF7' width='100%25' height='100%25'/><text x='50%25' y='48%25' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='56' fill='white'>DAA Assignment</text><text x='50%25' y='60%25' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='28' fill='white'>React • npm start</text></svg>",
-    },
-    {
-      title: "Algorithm Visualizer",
-      repo: "https://github.com/thealchemist1307/daa-assignment-2/tree/master",
-      live: "https://daa-assignment-2.vercel.app/visualization",
-      description:
-        "Second DAA repo oriented to a visualization page. JavaScript-heavy React project with public/src folders and npm scripts; deployed to Vercel.",
-      placeholder:
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%23111827' width='100%25' height='100%25'/><text x='50%25' y='46%25' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='54' fill='%23A5B4FC'>DAA Visualization</text><text x='50%25' y='60%25' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='28' fill='%23A5B4FC'>React • Vercel</text></svg>",
-    },
-    {
-      title: "Employees App",
-      repo: "https://github.com/thealchemist1307/employees-app",
-      description:
-        "Full-stack employee management: React + Tailwind UI with Node/Express GraphQL API using Prisma/PostgreSQL. Dockerized and CI/CD-ready.",
-      placeholder:
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%234A6CF7' width='100%' height='100%'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='64' fill='white'>👥 Employees App</text></svg>",
-    },
-    {
-      title: "Three.js Project",
-      repo: "https://github.com/thealchemist1307/threejs-project",
-      description:
-        "React + Vite playground for Three.js experiments; basic scene/camera scaffolding and deployment on Vercel.",
-      placeholder:
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%23111827' width='100%25' height='100%25'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='64' fill='%23A5B4FC'>🔺 Three.js Project</text></svg>",
-    },
-    {
-      title: "CompartirApp",
-      repo: "https://github.com/thealchemist1307/CompartirApp",
-      description:
-        "Prototype for a cab-sharing app with a minimalist interface and modern tooling.",
-      placeholder:
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%23F59E0B' width='100%25' height='100%25'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='64' fill='%23111827'>🔗 CompartirApp</text></svg>",
-    },
-    {
-      title: "Chatbot Application",
-      repo: "https://github.com/thealchemist1307/chatbot-application",
-      description:
-        "Solution repo for a Chatbot Application: clean scaffolding, tasks, and implementation notes.",
-      placeholder:
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'><rect fill='%230B7C66' width='100%25' height='100%25'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Segoe UI,Arial' font-size='64' fill='white'>🧪 AQ Assignment</text></svg>",
-    },
-  ];
   const listRef = useRef<HTMLDivElement | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
   const headerRef = useRef<HTMLElement | null>(null);
@@ -354,21 +269,13 @@ export default function ChatPage() {
           <div className="flex flex-col items-center text-center">
             <div className="mb-3 p-1 border-2 border-foreground bg-background shadow-brutal rounded-sm">
               <img
-                src="/profile_image_1.png"
+                src="https://picsum.photos/seed/me/200/200"
                 alt="Profile"
-                className="size-28 rounded-sm object-cover [image-rendering:pixelated] cursor-pointer"
-                role="button"
-                aria-label="Open profile photo"
-                tabIndex={0}
-                onClick={() => setPhotoOpen(true)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPhotoOpen(true); } }}
+                className="size-28 rounded-sm object-cover [image-rendering:pixelated]"
               />
             </div>
             <h2 className="text-lg font-extrabold tracking-tight">Nishit Chouhan</h2>
-            <p className="text-xs text-foreground/80 font-mono">@TheAlchemist1307</p>
-            <p className="text-[11px] text-foreground/80 font-mono">
-              <a href="mailto:nishitrchouhan@gmail.com" className="underline-offset-2 hover:underline">nishitrchouhan@gmail.com</a>
-            </p>
+            <p className="text-xs text-foreground/80 font-mono">@ThealCHEMIST1307</p>
             <div className="w-full mt-4">
               <div className="border-2 border-foreground bg-card shadow-brutal rounded-sm px-2 py-1 text-left flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-wide">Socials</span>
@@ -379,21 +286,6 @@ export default function ChatPage() {
                 </span>
               </div>
               <ul className="mt-2 grid grid-cols-1 gap-2">
-                {/* Business site – highlighted */}
-                <li>
-                  <a
-                    href="https://shauqtechnology.in/"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="social-link focus-brutal group relative flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-1 sm:gap-2 text-center sm:text-left border-2 border-foreground text-[#111827] shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:brightness-95 transition"
-                    style={{ background: 'linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #FDE68A 100%)' }}
-                    aria-label="Open Shauq Technology website"
-                  >
-                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0"><path d="M12 2l2.39 4.84L20 8l-4 3.9L17 18l-5-2.6L7 18l1-6.1L4 8l5.61-1.16L12 2Z" stroke="currentColor" strokeWidth="2" fill="currentColor" /></svg>
-                    <span className="text-[10px] sm:text-xs">Shauq Technology</span>
-                    <span className="absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden>↗</span>
-                  </a>
-                </li>
                 <li>
                   <a href="https://www.instagram.com/the.alchemist.1307/" target="_blank" rel="noreferrer noopener"
                     className="social-link focus-brutal group relative flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-1 sm:gap-2 text-center sm:text-left border-2 border-foreground text-white shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:brightness-95 transition"
@@ -431,17 +323,6 @@ export default function ChatPage() {
                   </a>
                 </li>
               </ul>
-            </div>
-            {/* Back to Home (desktop) */}
-            <div className="w-full mt-4">
-              <a
-                href="/"
-                className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal"
-                aria-label="Back to Home"
-              >
-                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /></svg>
-                <span className="text-xs">Back to Home</span>
-              </a>
             </div>
           </div>
         </aside>
@@ -568,107 +449,56 @@ export default function ChatPage() {
             <div className="h-1 bg-gradient-to-r from-accent via-primary to-secondary -mt-1 mb-3 border-x-2 border-b-2 border-foreground rounded-b-sm" />
           </div>
           <div className="projects-scroll flex-1 min-h-0 flex flex-col gap-3 overflow-y-auto pr-1">
-            {projects.map((p, idx) => {
-              const i = idx + 1;
-              const gradientClasses = [
-                'bg-gradient-to-br from-yellow-300 via-amber-500 to-yellow-300',
-                'bg-gradient-to-br from-violet-400 via-purple-600 to-indigo-300',
-                'bg-gradient-to-br from-emerald-300 via-emerald-500 to-teal-700',
-                'bg-gradient-to-br from-sky-300 via-blue-500 to-indigo-700',
-                'bg-gradient-to-br from-rose-300 via-red-500 to-rose-700',
-              ];
-              const grad = gradientClasses[idx % gradientClasses.length];
-              return (
-                <a
-                  key={p.title}
-                  href={p.live || p.repo}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label={`Open ${p.title} ${p.live ? 'live site' : 'repository'}`}
-                  aria-expanded={isOpen(i)}
-                  aria-controls={`project-meta-${i}`}
-                  className={`project-card nb-card focus-brutal ${isOpen(i) ? 'nb-card-open' : ''} border-2 border-foreground p-1 shadow-brutal rounded-sm bg-card overflow-visible flex-shrink-0 focus-within:outline-none`}
-                  onMouseEnter={() => open(i)}
-                  onMouseLeave={() => close(i)}
-                  onFocus={() => open(i)}
-                  onBlur={() => close(i)}
-                  onClick={(e) => {
-                    if (!isOpen(i)) {
-                      // First tap/click reveals; second activates navigation
-                      e.preventDefault();
-                      open(i);
-                    }
-                  }}
-                >
-                  <div className={`pc-image relative w-full overflow-hidden border-x-2 border-t-2 border-foreground rounded-t-sm h-32 sm:h-auto sm:[aspect-ratio:16/9] ${grad}`}>
-                    {/* Pixel effects over pure gradient background */}
-                    <div
-                      aria-hidden
-                      className="absolute inset-0 opacity-25 pointer-events-none"
-                      style={{
-                        backgroundImage:
-                          'linear-gradient(transparent 0, transparent calc(100% - 1px), rgba(0,0,0,0.25) 1px), linear-gradient(90deg, transparent 0, transparent calc(100% - 1px), rgba(0,0,0,0.25) 1px)',
-                        backgroundSize: '8px 8px',
-                      }}
-                    />
-                    <div
-                      aria-hidden
-                      className="absolute inset-0 opacity-10 mix-blend-multiply pointer-events-none"
-                      style={{
-                        backgroundImage:
-                          'repeating-linear-gradient(0deg, rgba(0,0,0,0.25) 0 1px, transparent 1px 2px)',
-                      }}
-                    />
-                    {/* Header label shown before card opens */}
-                    <div
-                      className={`pc-title absolute right-2 top-2 bg-secondary text-secondary-foreground border-2 border-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide shadow-brutal z-10 transition-all duration-200 ${isOpen(i) ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'}`}
-                    >
-                      {p.title}
-                    </div>
-                    <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-primary to-secondary opacity-80" />
+            {Array.from({ length: 20 }, (_, idx) => idx + 1).map((i) => (
+              <a
+                key={i}
+                href={`/projects/${i}`}
+                aria-label={`Open project ${i}`}
+                aria-expanded={isOpen(i)}
+                aria-controls={`project-meta-${i}`}
+                className={`project-card nb-card focus-brutal ${isOpen(i) ? 'nb-card-open' : ''} border-2 border-foreground p-1 shadow-brutal rounded-sm bg-card overflow-visible flex-shrink-0 focus-within:outline-none`}
+                onMouseEnter={() => open(i)}
+                onMouseLeave={() => close(i)}
+                onFocus={() => open(i)}
+                onBlur={() => close(i)}
+                onClick={(e) => {
+                  if (!isOpen(i)) {
+                    // First tap/click reveals; second activates navigation
+                    e.preventDefault();
+                    open(i);
+                  }
+                }}
+              >
+                <div className="pc-image relative w-full overflow-hidden border-x-2 border-t-2 border-foreground rounded-t-sm h-32 sm:h-auto sm:[aspect-ratio:16/9]">
+                  <img
+                    src={`https://picsum.photos/seed/${i}/800/450`}
+                    alt={`Project ${i}`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="pc-title absolute right-2 top-2 bg-secondary text-secondary-foreground border-2 border-foreground px-2 py-0.5 text-[10px] font-mono uppercase shadow-brutal z-10">
+                    PROJECT-{String(i).padStart(2, '0')}
                   </div>
-                  <div id={`project-meta-${i}`} className="pc-meta transition-all border-x-2 border-b-2 border-foreground rounded-b-sm bg-background">
-                    <div className="flex items-center justify-between px-2 py-1 border-t-2 border-foreground relative">
-                      <span className="pc-title-text font-mono text-xs md:text-[13px]">{p.title}</span>
-                      <span className="flex gap-1">
-                        <i className="w-3 h-3 bg-primary inline-block" />
-                        <i className="w-3 h-3 bg-secondary inline-block" />
-                        <i className="w-3 h-3 bg-accent inline-block" />
-                      </span>
-                    </div>
-                    <div className="px-2 pb-2 text-[11px] text-foreground/70">
-                      <p>
-                        {p.description}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <a
-                          href={p.repo}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="inline-flex items-center gap-1 border-2 border-foreground bg-background text-foreground rounded-sm px-2 py-0.5 shadow-brutal focus-brutal hover:bg-secondary hover:text-secondary-foreground"
-                          aria-label={`Open ${p.title} repository`}
-                        >
-                          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3h7v7M21 3l-9 9M5 5v16h16" stroke="currentColor" strokeWidth="2" /></svg>
-                          <span className="text-[10px] font-semibold uppercase tracking-wide">Repo</span>
-                        </a>
-                        {p.live && (
-                          <a
-                            href={p.live}
-                            target="_blank"
-                            rel="noreferrer noopener"
-                            className="inline-flex items-center gap-1 border-2 border-foreground bg-background text-foreground rounded-sm px-2 py-0.5 shadow-brutal focus-brutal hover:bg-secondary hover:text-secondary-foreground"
-                            aria-label={`Open ${p.title} live site`}
-                          >
-                            <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3h7v7M21 3l-9 9M5 5v16h16" stroke="currentColor" strokeWidth="2" /></svg>
-                            <span className="text-[10px] font-semibold uppercase tracking-wide">Live</span>
-                          </a>
-                        )}
-                      </div>
-                    </div>
+                  <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-accent via-primary to-secondary opacity-80" />
+                </div>
+                <div id={`project-meta-${i}`} className="pc-meta transition-all border-x-2 border-b-2 border-foreground rounded-b-sm bg-background">
+                  <div className="flex items-center justify-between px-2 py-1 border-t-2 border-foreground relative">
+                    <span className="pc-title-text font-mono text-xs md:text-[13px]">PROJECT-{String(i).padStart(2, '0')}</span>
+                    <span className="flex gap-1">
+                      <i className="w-3 h-3 bg-primary inline-block" />
+                      <i className="w-3 h-3 bg-secondary inline-block" />
+                      <i className="w-3 h-3 bg-accent inline-block" />
+                    </span>
                   </div>
-                </a>
-              );
-            })}
+                  <div className="px-2 pb-2 text-[11px] text-foreground/70">
+                    <p>
+                      Short description for project {i}. This is placeholder copy to ensure the card has
+                      enough height for testing vertical scrolling within the projects section.
+                    </p>
+                  </div>
+                </div>
+              </a>
+            ))}
           </div>
         </aside>
       </div>
@@ -705,21 +535,13 @@ export default function ChatPage() {
             <div className="flex flex-col items-center text-center">
               <div className="mb-3 p-1 border-2 border-foreground bg-background shadow-brutal rounded-sm">
                 <img
-                  src="/profile_image_1.png"
+                  src="https://picsum.photos/seed/me/200/200"
                   alt="Profile"
-                  className="size-28 rounded-sm object-cover [image-rendering:pixelated] cursor-pointer"
-                  role="button"
-                  aria-label="Open profile photo"
-                  tabIndex={0}
-                  onClick={() => setPhotoOpen(true)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPhotoOpen(true); } }}
+                  className="size-28 rounded-sm object-cover [image-rendering:pixelated]"
                 />
               </div>
               <h2 className="text-lg font-extrabold tracking-tight">Nishit Chouhan</h2>
-              <p className="text-xs text-foreground/80 font-mono">@TheAlchemist1307</p>
-              <p className="text-[11px] text-foreground/80 font-mono">
-                <a href="mailto:nishitchouhan@shauqtechnology.com" className="underline-offset-2 hover:underline">nishitchouhan@shauqtechnology.com</a>
-              </p>
+              <p className="text-xs text-foreground/80 font-mono">@ThealCHEMIST1307</p>
               <div className="w-full mt-4">
                 <div className="border-2 border-foreground bg-card shadow-brutal rounded-sm px-2 py-1 text-left flex items-center justify-between">
                   <span className="text-[11px] font-semibold uppercase tracking-wide">Socials</span>
@@ -767,50 +589,11 @@ export default function ChatPage() {
                     </a>
                   </li>
                 </ul>
-                {/* Back to Home (mobile) */}
-                <div className="w-full mt-4">
-                  <a
-                    href="/"
-                    className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal"
-                    aria-label="Back to Home"
-                    onClick={() => setProfileOpen(false)}
-                  >
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" /></svg>
-                    <span className="text-xs">Back to Home</span>
-                  </a>
-                </div>
               </div>
             </div>
           </aside>
         </div>
       )}
-
-      {/* Profile Photo Dialog */}
-      <Dialog open={photoOpen} onOpenChange={setPhotoOpen}>
-        <DialogOverlay />
-        <DialogContent>
-          <div className="relative border-2 border-foreground bg-primary shadow-brutal rounded-sm p-2 max-w-[min(92vw,700px)] max-h-[90vh] flex items-center justify-center">
-            <img
-              src="/profile_image_1.png"
-              alt="Profile enlarged"
-              className="max-w-full max-h-[82vh] object-contain"
-            />
-            <div className="absolute top-3 right-3 md:top-4 md:right-4">
-              <DialogClose aria-label="Close image" className="p-0 m-0 bg-transparent border-0 shadow-none inline-flex">
-                <span
-                  className="inline-flex items-center justify-center w-8 h-8 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm hover:bg-secondary hover:text-secondary-foreground"
-                  aria-hidden
-                >
-                  {/* Cross icon */}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                </span>
-              </DialogClose>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <style jsx global>{`
         /* On chat route: allow vertical scroll on small screens */
@@ -862,19 +645,6 @@ export default function ChatPage() {
         /* Fade the over-image badge out when open; no morph */
         .pc-title { transition: opacity .25s ease; }
         .nb-card-open .pc-title, .nb-card:hover .pc-title, .nb-card:focus-visible .pc-title { opacity: 0; }
-        /* Pixel art UI for project title text */
-        .pc-title, .pc-title-text {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-          text-transform: uppercase;
-          letter-spacing: 0;
-          image-rendering: pixelated;
-        }
-        .pc-title {
-          box-shadow: 0 0 0 2px var(--foreground), 6px 6px 0 0 rgba(0,0,0,.35);
-        }
-        .pc-title-text {
-          text-shadow: 1px 1px 0 var(--background), 2px 2px 0 var(--foreground);
-        }
         /* Reduced motion support */
         @media (prefers-reduced-motion: reduce) {
           .nb-card .pc-image img { transition: none; }
