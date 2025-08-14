@@ -24,40 +24,58 @@ export default function CloudHint({ hidden = false }: { hidden?: boolean }) {
       const detail = (e as CustomEvent<CursorEventDetail>).detail;
       if (!detail) return;
       setIsMoonActive(!!detail.isMoon);
-      if (detail.isMoon) setHideLabel(true);
+      // Persist the label: do not hide it when moon is active
     };
     window.addEventListener('cursorPosition' as any, onCursorUpdate as EventListener);
     return () => window.removeEventListener('cursorPosition' as any, onCursorUpdate as EventListener);
   }, []);
 
-  // Default: "click here"; on iOS/Android devices: "tap here"
-  const label = useMemo(() => (isMobileTouch ? "tap here" : "click here"), [isMobileTouch]);
+  // Default: "come here"; on iOS/Android devices: "tap here"
+  const label = useMemo(() => (isMobileTouch ? "tap here" : "come here"), [isMobileTouch]);
 
-  // Hide the entire cloud while moon cursor is active, or if explicitly hidden
-  if (hidden || isMoonActive) return null;
+  // Only hide if explicitly requested via props; keep visible even when moon is active
+  if (hidden) return null;
 
   return (
     <div className={styles.container} aria-hidden>
       <div className={styles.wrapper}>
         <div className={styles.cloud} />
-        {!hideLabel && (
-          <div className={styles.labelOverlay}>
-            <div className={styles.label}>
-              {(() => {
-                const parts = label.split(' ');
-                const first = parts[0] ?? '';
-                const second = parts.slice(1).join(' ');
-                return (
-                  <>
-                    <span>{first}</span>
-                    <br />
-                    <span>{second}</span>
-                  </>
-                );
-              })()}
+        <div className={styles.labelOverlay}>
+          <div className={styles.label}>
+            <div className={styles.textWrap}>
+              {/* Base black text */}
+              <div className={styles.textBase}>
+                {(() => {
+                  const parts = label.split(' ');
+                  const first = parts[0] ?? '';
+                  const second = parts.slice(1).join(' ');
+                  return (
+                    <>
+                      <span>{first}</span>
+                      <br />
+                      <span>{second}</span>
+                    </>
+                  );
+                })()}
+              </div>
+              {/* RGB shimmer overlay */}
+              <div className={styles.textRGB} aria-hidden>
+                {(() => {
+                  const parts = label.split(' ');
+                  const first = parts[0] ?? '';
+                  const second = parts.slice(1).join(' ');
+                  return (
+                    <>
+                      <span>{first}</span>
+                      <br />
+                      <span>{second}</span>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

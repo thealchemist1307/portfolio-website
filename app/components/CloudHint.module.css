@@ -100,17 +100,12 @@
 
 .label {
   position: absolute; /* place above the cloud */
-  top: -6%;
-  left: 50%;
-  transform: translate(-50%, 0);
-  /* Stronger animated gradient text */
-  background: linear-gradient(90deg, #06b6d4, #22c55e, #eab308, #ef4444, #8b5cf6, #06b6d4);
-  background-size: 400% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.75), 0 2px 6px rgba(0,0,0,0.25);
-  -webkit-text-stroke: 1px rgba(255,255,255,0.4);
+  top: 58%;
+  left: 52%;
+  transform: translate(-50%, -50%);
+  /* Base typography for both layers */
+  color: #000; /* base black */
+  text-shadow: none;
   font-weight: 800;
   font-family: 'Press Start 2P', cursive;
   font-size: clamp(10px, 1.8vw, 16px);
@@ -120,16 +115,53 @@
   text-align: center;
   width: 90%; /* fit within cloud horizontally */
   line-height: 1.1;
-  animation: textShimmer 4.5s ease-in-out infinite;
   z-index: 21; /* above overlay container */
+}
+
+/* Text layering for RGB over black */
+.textWrap {
+  position: relative;
+  display: inline-block;
+}
+
+.textBase {
+  color: #000; /* visible black base */
+}
+
+.textRGB {
+  position: absolute;
+  inset: 0;
+  /* Shimmering RGB gradient clipped to text */
+  background: linear-gradient(90deg, #06b6d4, #22c55e, #eab308, #ef4444, #8b5cf6, #06b6d4);
+  background-size: 400% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Sync with cloud ::after which uses gradientShift 5s ease-in-out */
+  animation: gradientShift 5s ease-in-out infinite;
+  mix-blend-mode: screen; /* blend over black nicely */
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 /* Per-breakpoint fine tuning: adjust if needed */
 @media (max-width: 639px) {
   .container { --caption-shift: 6%; }
+  /* Smaller font and slight position tweak on small screens */
+  .label {
+    font-size: clamp(9px, 3.0vw, 12px);
+    left: 53%;
+    top: 60%;
+  }
 }
 @media (min-width: 640px) and (max-width: 1023px) {
   .container { --caption-shift: 10%; }
+  /* Reduce font a bit and nudge position for md screens */
+  .label {
+    font-size: clamp(10px, 1.6vw, 14px);
+    left: 52.5%;
+    top: 59%;
+  }
 }
 @media (min-width: 1024px) {
   .container { --caption-shift: 12%; }

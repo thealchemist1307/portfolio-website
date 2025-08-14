@@ -191,8 +191,8 @@ export default function RunningCharacter() {
               // Use strong shadow for contrast instead of heavy stroke (which can hide fill)
               textShadow: '0 2px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.5)',
               fontWeight: 800,
-              // Responsive text size across screens (sm unchanged, md/lg smaller)
-              fontSize: 'clamp(14px, 2.2vw, 30px)',
+              // Responsive text size across screens (slightly smaller everywhere)
+              fontSize: 'clamp(12px, 1.9vw, 26px)',
               padding: '2px 0.4em',
               background: 'rgba(0,0,0,0.25)',
               borderRadius: '4px',
@@ -201,7 +201,7 @@ export default function RunningCharacter() {
               fontFamily: "'Press Start 2P', cursive"
             }}
           >
-            the grind never stops
+            It's not a bug it's a feature
           </div>
         )}
       </div>
