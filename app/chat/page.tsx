@@ -14,6 +14,18 @@ type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  streaming?: boolean; // indicates message is currently being streamed
+};
+
+// Safe ID generator for environments where crypto.randomUUID is unavailable
+const safeRandomId = () => {
+  try {
+    const uuid = (globalThis as any)?.crypto?.randomUUID?.();
+    if (uuid) return uuid as string;
+  } catch {}
+  // RFC4122-ish fallback (not crypto-strong)
+  const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
+  return `${Date.now().toString(16)}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
 };
 
 export default function ChatPage() {
@@ -108,6 +120,21 @@ export default function ChatPage() {
       setTimeout(() => setProfileOpen(true), 0);
     }
   }, []);
+  // When the user closes the mobile drawer the first time, show the "More Projects" cue briefly
+  const hasClosedProfileOnceRef = useRef(false);
+  useEffect(() => {
+    if (profileOpen === false) {
+      const mq = window.matchMedia('(max-width: 767px)');
+      if (mq.matches && !hasClosedProfileOnceRef.current) {
+        hasClosedProfileOnceRef.current = true;
+        try { setShowCue(true); } catch {}
+        const t = setTimeout(() => {
+          try { setShowCue(false); } catch {}
+        }, 3000);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [profileOpen]);
   const [messages, setMessages] = useState<Message[]>([
     { id: "m1", role: "assistant", content: "Hi! How can I help you today?" },
   ]);
@@ -117,6 +144,11 @@ export default function ChatPage() {
     "What stack do you use?",
     "How can I contact you?",
   ]);
+  // Abort and timers for in-flight ask
+  const controllerRef = useRef<AbortController | null>(null);
+  const typingTimerRef = useRef<number | null>(null);
+  const blinkTimerRef = useRef<number | null>(null);
+  const watcherRef = useRef<number | null>(null);
   // Projects data
   const projects: { title: string; repo: string; description: string; placeholder: string; live?: string }[] = [
     {
@@ -184,6 +216,8 @@ export default function ChatPage() {
   const headerRef = useRef<HTMLElement | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const cueRef = useRef<HTMLDivElement | null>(null);
+  // Prevent double fire on touch devices (touchstart + click)
+  const lastTouchRef = useRef<number>(0);
   const [suggestionsBottom, setSuggestionsBottom] = useState<number>(80);
 
   useEffect(() => {
@@ -213,30 +247,121 @@ export default function ChatPage() {
   const onSend = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
-    const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: trimmed };
+    const userMsg: Message = { id: safeRandomId(), role: "user", content: trimmed };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    // Placeholder assistant echo for now
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: "assistant", content: `You said: ${trimmed}` },
-      ]);
-    }, 400);
+    callAsk(trimmed);
   };
 
   const sendText = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
-    const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: trimmed };
+    const userMsg: Message = { id: safeRandomId(), role: "user", content: trimmed };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: "assistant", content: `You said: ${trimmed}` },
-      ]);
-    }, 400);
+    callAsk(trimmed);
+  };
+
+  // Call local LLM API and stream-render the response
+  const callAsk = async (question: string) => {
+    // Insert loader message first
+    const loaderId = safeRandomId();
+    const friendlyNotice =
+      "Did you know? Nishit Chouhan runs his LLM locally. If there's any latency, thanks for your patience.";
+    setMessages((prev) => [
+      ...prev,
+      { id: loaderId, role: "assistant", content: `⏳ ${friendlyNotice}` , streaming: true},
+    ]);
+
+    let answerText = "";
+    try {
+      // Setup abort controller for this request
+      const controller = new AbortController();
+      controllerRef.current = controller;
+      const res = await fetch("http://192.168.1.26:3013/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, k: 6, return_snippets: true }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      // Try JSON first, fall back to text
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        answerText =
+          data?.answer ?? data?.text ?? data?.response ?? data?.message ?? JSON.stringify(data);
+      } else {
+        answerText = await res.text();
+      }
+    } catch (err: any) {
+      // If aborted, just exit silently (New reset likely triggered)
+      if (err?.name === 'AbortError') {
+        return;
+      }
+      answerText = `Sorry, I couldn't reach the local LLM (${err?.message || "unknown error"}).`;
+    } finally {
+      // Clear controller when request finishes/aborts
+      if (controllerRef.current) controllerRef.current = null;
+    }
+
+    // Replace loader by streaming the final text character-by-character
+    // Start by clearing the loader content
+    setMessages((prev) => prev.map((m) => (m.id === loaderId ? { ...m, content: "" } : m)));
+
+    let idx = 0;
+    let cursorVisible = true;
+    const cursorChar = " ▌"; // block cursor
+    const typeInterval = 15; // ms per character
+    const blinkIntervalMs = 450; // blink speed
+
+    const updateWithCursor = () => {
+      const chunk = answerText.slice(0, idx);
+      const withCursor = idx < answerText.length
+        ? chunk + (cursorVisible ? cursorChar : "")
+        : chunk;
+      setMessages((prev) => prev.map((m) => (m.id === loaderId ? { ...m, content: withCursor } : m)));
+    };
+
+    const typingTimer = window.setInterval(() => {
+      if (idx < answerText.length) {
+        idx += 1;
+        updateWithCursor();
+      } else {
+        clearInterval(typingTimer);
+      }
+    }, typeInterval);
+    typingTimerRef.current = typingTimer;
+
+    const blinkTimer = window.setInterval(() => {
+      if (idx >= answerText.length) return; // only blink while streaming
+      cursorVisible = !cursorVisible;
+      updateWithCursor();
+    }, blinkIntervalMs);
+    blinkTimerRef.current = blinkTimer;
+
+    const finish = () => {
+      // Cleanup timers and remove cursor, unset streaming
+      try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch {}
+      try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch {}
+      const finalText = answerText;
+      setMessages((prev) => prev.map((m) => (
+        m.id === loaderId ? { ...m, content: finalText, streaming: false } : m
+      )));
+    };
+
+    // Ensure we finalize when typing completes
+    const watcher = window.setInterval(() => {
+      if (idx >= answerText.length) {
+        clearInterval(watcher);
+        finish();
+      }
+    }, 50);
+    watcherRef.current = watcher;
   };
 
   const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
@@ -441,8 +566,19 @@ export default function ChatPage() {
                 </li>
               </ul>
             </div>
-            {/* Back to Home (desktop) */}
+            {/* CV Download + Back to Home (desktop) */}
             <div className="w-full mt-4">
+              <a
+                href="/cv/Nishit_Singh_Chouhan_CV.pdf"
+                download="Nishit_Singh_Chouhan_CV.pdf"
+                className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal"
+                aria-label="Download CV"
+              >
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <span className="text-xs">Download CV</span>
+              </a>
+            </div>
+            <div className="w-full mt-2">
               <a
                 href="/"
                 className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal"
@@ -475,10 +611,37 @@ export default function ChatPage() {
                 </svg>
               </button>
               <h1 className="text-base font-semibold">Chat</h1>
-              <p className="text-xs text-foreground/60">shadcn-style, responsive</p>
+              <p className="text-xs text-foreground/60">Still under construction</p>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm">New</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // Abort any in-flight request
+                  try {
+                    if (controllerRef.current) {
+                      controllerRef.current.abort();
+                      controllerRef.current = null;
+                    }
+                  } catch {}
+                  // Clear any running timers
+                  try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch {}
+                  try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch {}
+                  try { if (watcherRef.current != null) { clearInterval(watcherRef.current); watcherRef.current = null; } } catch {}
+                  setMessages([{ id: "m1", role: "assistant", content: "Hi! How can I help you today?" }]);
+                  setSuggestions([
+                    "Show my top projects",
+                    "What stack do you use?",
+                    "How can I contact you?",
+                  ]);
+                  setInput("");
+                }}
+                aria-label="Start new chat"
+                title="Start new chat"
+              >
+                New
+              </Button>
             </div>
           </header>
 
@@ -489,7 +652,7 @@ export default function ChatPage() {
                 {m.role === 'user' ? (
                   <div className="ml-auto max-w-[85%] sm:max-w-[70%] relative">
                     <div
-                      className="rounded-xl border-2 border-foreground px-3 py-2 text-sm leading-6 tracking-tight shadow-brutal"
+                      className="rounded-xl border-2 border-foreground px-3 py-2 text-sm leading-6 tracking-tight shadow-brutal whitespace-pre-wrap"
                       style={{ backgroundColor: '#F5D0FF', color: '#1B1B1B' }}
                     >
                       {m.content}
@@ -497,12 +660,32 @@ export default function ChatPage() {
                   </div>
                 ) : (
                   <div className="mr-auto max-w-[85%] sm:max-w-[70%] relative">
-                    <div
-                      className="rounded-xl border-2 border-foreground px-3 py-2 text-sm leading-6 tracking-tight shadow-brutal"
-                      style={{ backgroundColor: '#FFF3D6', color: 'var(--foreground)' }}
-                    >
-                      {m.content}
-                    </div>
+                    {m.streaming && (m.content.length === 0 || m.content.startsWith("⏳")) ? (
+                      <>
+                        <div
+                          className="rounded-xl border-2 border-foreground px-3 py-2 text-sm leading-6 tracking-tight shadow-brutal whitespace-pre-wrap"
+                          style={{ backgroundColor: '#FFF3D6', color: 'var(--foreground)' }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block animate-spin" aria-hidden>⏳</span>
+                            <span className="text-sm leading-6">Generating…</span>
+                          </div>
+                        </div>
+                        <p className="mt-3 inline-flex items-center gap-3 text-xs text-foreground/70 w-fit">
+                          <span aria-hidden className="leading-none text-base">🚀</span>
+                          <span>
+                            Did you know? Nishit Chouhan runs his LLM locally. If there's any latency, thanks for your patience.
+                          </span>
+                        </p>
+                      </>
+                    ) : (
+                      <div
+                        className={`rounded-xl border-2 border-foreground px-3 py-2 text-sm leading-6 tracking-tight shadow-brutal whitespace-pre-wrap`}
+                        style={{ backgroundColor: '#FFF3D6', color: 'var(--foreground)' }}
+                      >
+                        {m.content}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -530,14 +713,26 @@ export default function ChatPage() {
           {/* Floating suggestion chips inside chat box (no clipping).
               Hide on small screens while the mobile cue is visible. */}
           {(!isSmallScreen || !showCue) && (
-            <div className="pointer-events-none absolute inset-x-0 z-20 px-[10px] mx-[10px]" style={{ bottom: suggestionsBottom }}>
+            <div className="pointer-events-none absolute inset-x-0 z-10 px-[10px] mx-[10px]" style={{ bottom: suggestionsBottom }}>
               <div className="pointer-events-auto flex flex-nowrap whitespace-nowrap gap-2 justify-end overflow-x-auto overflow-y-visible scroll-px-3 snap-x snap-mandatory pr-3">
                 {suggestions.map((q) => (
                   <button
                     key={q}
                     type="button"
-                    className="group border-2 border-foreground rounded-sm bg-secondary text-secondary-foreground px-2.5 py-1.5 text-[11px] font-black uppercase tracking-wide focus-brutal inline-flex items-center gap-1.5 snap-start whitespace-nowrap shadow-brutal mb-[10px]"
-                    onClick={() => { sendText(q); setSuggestions((prev) => prev.filter((s) => s !== q)); }}
+                    className="group cursor-pointer select-none border-2 border-foreground rounded-sm bg-secondary text-secondary-foreground px-2.5 py-1.5 text-[11px] font-black uppercase tracking-wide focus-brutal inline-flex items-center gap-1.5 snap-start whitespace-nowrap shadow-brutal mb-[10px] active:translate-y-[1px]"
+                    onClick={() => {
+                      if (Date.now() - lastTouchRef.current < 500) return; // ignore ghost click after touch
+                      sendText(q);
+                      setSuggestions((prev) => prev.filter((s) => s !== q));
+                    }}
+                    onPointerDown={(e) => {
+                      if ((e as any).pointerType && (e as any).pointerType !== 'mouse') {
+                        e.preventDefault();
+                        lastTouchRef.current = Date.now();
+                        sendText(q);
+                        setSuggestions((prev) => prev.filter((s) => s !== q));
+                      }
+                    }}
                     aria-label={`Ask: ${q}`}
                   >
                     <span className="inline-flex items-center gap-1.5 transition-transform group-hover:-translate-x-[3px] group-hover:-translate-y-[3px]">
@@ -551,7 +746,7 @@ export default function ChatPage() {
           )}
 
           {/* Composer */}
-          <div ref={composerRef} className="grid grid-cols-[1fr_auto] items-center gap-2 border-t-2 border-foreground bg-card p-3">
+          <div ref={composerRef} className="relative z-30 grid grid-cols-[1fr_auto] items-center gap-2 border-t-2 border-foreground bg-card p-3">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -560,7 +755,19 @@ export default function ChatPage() {
               inputSize="md"
               className="bg-background"
             />
-            <Button onClick={onSend} size="md" className="w-20">Send</Button>
+            <Button
+              onClick={onSend}
+              onPointerDown={(e) => {
+                if ((e as any).pointerType && (e as any).pointerType !== 'mouse') {
+                  e.preventDefault();
+                  onSend();
+                }
+              }}
+              size="md"
+              className="w-20"
+            >
+              Send
+            </Button>
           </div>
         </section>
 
@@ -808,8 +1015,19 @@ export default function ChatPage() {
                     </a>
                   </li>
                 </ul>
-                {/* Back to Home (mobile) */}
+                {/* CV Download + Back to Home (mobile) */}
                 <div className="w-full mt-4">
+                  <a
+                    href="/cv/Nishit_Singh_Chouhan_CV.pdf"
+                    download="Nishit_Singh_Chouhan_CV.pdf"
+                    className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal w-full justify-center"
+                    aria-label="Download CV"
+                  >
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <span className="text-xs">Download CV</span>
+                  </a>
+                </div>
+                <div className="w-full mt-2">
                   <a
                     href="/"
                     className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal"
