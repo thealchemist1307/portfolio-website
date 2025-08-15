@@ -149,6 +149,9 @@ export default function ChatPage() {
   const typingTimerRef = useRef<number | null>(null);
   const blinkTimerRef = useRef<number | null>(null);
   const watcherRef = useRef<number | null>(null);
+  // Debounce and in-flight state
+  const lastSubmitRef = useRef<number | null>(null);
+  const [isAsking, setIsAsking] = useState(false);
   // Projects data
   const projects: { title: string; repo: string; description: string; placeholder: string; live?: string }[] = [
     {
@@ -247,6 +250,20 @@ export default function ChatPage() {
   const onSend = () => {
     const trimmed = input.trim();
     if (!trimmed) return;
+    // Client-side length bound
+    if (trimmed.length > 1500) {
+      setMessages((prev) => [
+        ...prev,
+        { id: safeRandomId(), role: "assistant", content: "Please keep your question under 1500 characters." },
+      ]);
+      return;
+    }
+    // Debounce: 1.2s between submits
+    const now = Date.now();
+    if (lastSubmitRef.current && now - lastSubmitRef.current < 1200) return;
+    lastSubmitRef.current = now;
+    // Prevent concurrent asks
+    if (isAsking) return;
     const userMsg: Message = { id: safeRandomId(), role: "user", content: trimmed };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -256,6 +273,17 @@ export default function ChatPage() {
   const sendText = (text: string) => {
     const trimmed = text.trim();
     if (!trimmed) return;
+    if (trimmed.length > 1500) {
+      setMessages((prev) => [
+        ...prev,
+        { id: safeRandomId(), role: "assistant", content: "Please keep your question under 1500 characters." },
+      ]);
+      return;
+    }
+    const now = Date.now();
+    if (lastSubmitRef.current && now - lastSubmitRef.current < 1200) return;
+    lastSubmitRef.current = now;
+    if (isAsking) return;
     const userMsg: Message = { id: safeRandomId(), role: "user", content: trimmed };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -278,38 +306,57 @@ export default function ChatPage() {
       // Setup abort controller for this request
       const controller = new AbortController();
       controllerRef.current = controller;
-      const res = await fetch("http://192.168.1.26:3013/ask", {
+      setIsAsking(true);
+      const headers: Record<string, string> = { "Content-Type": "application/json", "Accept": "application/json" };
+      const res = await fetch("/api/ask", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, k: 6, return_snippets: true }),
+        headers,
+        body: JSON.stringify({ question, k: 6 }),
         signal: controller.signal,
       });
 
-      if (!res.ok) {
+      if (res.status === 401) {
+        answerText = "Unauthorized. Please try again later.";
+      } else if (res.status === 429) {
+        answerText = "Too many requests. Please slow down and try again in a bit.";
+      } else if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
-      }
-
-      // Try JSON first, fall back to text
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("application/json")) {
-        const data = await res.json();
-        answerText =
-          data?.answer ?? data?.text ?? data?.response ?? data?.message ?? JSON.stringify(data);
       } else {
-        answerText = await res.text();
+        // Non-stream: parse JSON or text
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const data = await res.json();
+          answerText =
+            data?.answer ?? data?.text ?? data?.response ?? data?.message ?? JSON.stringify(data);
+        } else {
+          answerText = await res.text();
+        }
       }
     } catch (err: any) {
       // If aborted, just exit silently (New reset likely triggered)
       if (err?.name === 'AbortError') {
         return;
       }
-      answerText = `Sorry, I couldn't reach the local LLM (${err?.message || "unknown error"}).`;
+      if (!answerText) {
+        answerText = `Sorry, I couldn't reach the server (${err?.message || "unknown error"}).`;
+      }
     } finally {
       // Clear controller when request finishes/aborts
       if (controllerRef.current) controllerRef.current = null;
+      setIsAsking(false);
     }
 
-    // Replace loader by streaming the final text character-by-character
+    const finish = () => {
+      // Cleanup timers and remove cursor, unset streaming
+      try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch {}
+      try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch {}
+      const finalText = answerText;
+      setMessages((prev) => prev.map((m) => (
+        m.id === loaderId ? { ...m, content: finalText, streaming: false } : m
+      )));
+    };
+
+    // Typewriter effect for non-stream response
     // Start by clearing the loader content
     setMessages((prev) => prev.map((m) => (m.id === loaderId ? { ...m, content: "" } : m)));
 
@@ -338,26 +385,16 @@ export default function ChatPage() {
     typingTimerRef.current = typingTimer;
 
     const blinkTimer = window.setInterval(() => {
-      if (idx >= answerText.length) return; // only blink while streaming
+      if (idx >= answerText.length) return; // only blink while typing
       cursorVisible = !cursorVisible;
       updateWithCursor();
     }, blinkIntervalMs);
     blinkTimerRef.current = blinkTimer;
 
-    const finish = () => {
-      // Cleanup timers and remove cursor, unset streaming
-      try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch {}
-      try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch {}
-      const finalText = answerText;
-      setMessages((prev) => prev.map((m) => (
-        m.id === loaderId ? { ...m, content: finalText, streaming: false } : m
-      )));
-    };
-
-    // Ensure we finalize when typing completes
     const watcher = window.setInterval(() => {
       if (idx >= answerText.length) {
         clearInterval(watcher);
+        // Finalize after typing completes
         finish();
       }
     }, 50);
@@ -636,6 +673,7 @@ export default function ChatPage() {
                     "How can I contact you?",
                   ]);
                   setInput("");
+                  setIsAsking(false);
                 }}
                 aria-label="Start new chat"
                 title="Start new chat"
@@ -754,6 +792,7 @@ export default function ChatPage() {
               placeholder="Type your message…"
               inputSize="md"
               className="bg-background"
+              disabled={isAsking}
             />
             <Button
               onClick={onSend}
@@ -765,6 +804,8 @@ export default function ChatPage() {
               }}
               size="md"
               className="w-20"
+              disabled={isAsking}
+              aria-busy={isAsking}
             >
               Send
             </Button>

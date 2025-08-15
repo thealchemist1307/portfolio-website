@@ -11,6 +11,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      # Pass through from system environment or .env file (Compose variable substitution)
+      RAG_API_KEY: ${RAG_API_KEY}
     restart: unless-stopped
 
 # Notes:
