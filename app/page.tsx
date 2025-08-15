@@ -77,7 +77,7 @@ export default function LandingPage() {
     <>
       {/* Global toggle to switch between Classic and CRT overlay (hidden for now) */}
       {/* Info button positioned below CRT effect */}
-      <div className="fixed left-1/2 bottom-8 z-[100] transform -translate-x-1/2">
+      <div className="fixed bottom-4 md:bottom-8 z-[100] right-4 md:right-auto md:left-1/2 md:transform md:-translate-x-1/2">
         <a
           href="/chat"
           className="border-2 border-foreground bg-card text-foreground shadow-brutal rounded-sm px-6 py-2 flex items-center gap-2 cursor-pointer select-none hover:bg-accent hover:text-accent-foreground transition-colors"

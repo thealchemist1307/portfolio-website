@@ -223,6 +223,9 @@ export default function ChatPage() {
   const cueRef = useRef<HTMLDivElement | null>(null);
   // Prevent double fire on touch devices (touchstart + click)
   const lastTouchRef = useRef<number>(0);
+  // Track touch movement to distinguish scroll vs tap on chips
+  const touchStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const touchScrollingRef = useRef<boolean>(false);
   const [suggestionsBottom, setSuggestionsBottom] = useState<number>(80);
 
   useEffect(() => {
@@ -691,7 +694,14 @@ export default function ChatPage() {
           </header>
 
           {/* Messages (restored bubble style/colors) */}
-          <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4">
+          <div
+            ref={listRef}
+            className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4"
+            style={{
+              // Ensure last message isn't hidden behind floating chips/composer
+              paddingBottom: suggestionsBottom + ((!isSmallScreen || !showCue) ? 56 : 8),
+            }}
+          >
             {messages.map((m) => (
               <div key={m.id} className="flex w-full">
                 {m.role === 'user' ? (
@@ -759,24 +769,45 @@ export default function ChatPage() {
               Hide on small screens while the mobile cue is visible. */}
           {(!isSmallScreen || !showCue) && (
             <div className="pointer-events-none absolute inset-x-0 z-10 px-[10px] mx-[10px]" style={{ bottom: suggestionsBottom }}>
-              <div className="pointer-events-auto flex flex-nowrap whitespace-nowrap gap-2 justify-end overflow-x-auto overflow-y-visible scroll-px-3 snap-x snap-mandatory pr-3">
+              <div
+                className="pointer-events-auto flex flex-nowrap whitespace-nowrap gap-2 justify-end overflow-x-auto overflow-y-visible scroll-px-3 snap-x snap-mandatory pr-3"
+                style={{ touchAction: 'pan-x' }}
+              >
                 {suggestions.map((q) => (
                   <button
                     key={q}
                     type="button"
                     className="group cursor-pointer select-none border-2 border-foreground rounded-sm bg-secondary text-secondary-foreground px-2.5 py-1.5 text-[11px] font-black uppercase tracking-wide focus-brutal inline-flex items-center gap-1.5 snap-start whitespace-nowrap shadow-brutal mb-[10px] active:translate-y-[1px]"
                     onClick={() => {
-                      if (Date.now() - lastTouchRef.current < 500) return; // ignore ghost click after touch
+                      // On touch devices, we handle via touchend; ignore click
+                      if (isTouch) return;
                       sendText(q);
                       setSuggestions((prev) => prev.filter((s) => s !== q));
                     }}
-                    onPointerDown={(e) => {
-                      if ((e as any).pointerType && (e as any).pointerType !== 'mouse') {
+                    onTouchStart={(e) => {
+                      const t = e.touches[0];
+                      touchStartRef.current = { x: t.clientX, y: t.clientY };
+                      touchScrollingRef.current = false;
+                    }}
+                    onTouchMove={(e) => {
+                      const t = e.touches[0];
+                      const dx = Math.abs(t.clientX - touchStartRef.current.x);
+                      const dy = Math.abs(t.clientY - touchStartRef.current.y);
+                      if (dx > 10 || dy > 10) {
+                        touchScrollingRef.current = true;
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      // If it was a tap (no scroll), trigger send here
+                      if (!touchScrollingRef.current) {
                         e.preventDefault();
-                        lastTouchRef.current = Date.now();
                         sendText(q);
                         setSuggestions((prev) => prev.filter((s) => s !== q));
                       }
+                      // Mark time to suppress ghost click
+                      lastTouchRef.current = Date.now();
+                      // Reset scroll flag on next tick
+                      setTimeout(() => { touchScrollingRef.current = false; }, 0);
                     }}
                     aria-label={`Ask: ${q}`}
                   >
