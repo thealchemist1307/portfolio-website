@@ -13,6 +13,9 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: self-hosted
+    environment: env
+    env:
+      RAG_API_KEY: ${{ secrets.RAG_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -20,16 +23,16 @@ jobs:
       # Tear down previous stack
       - name: Tear down previous stack
         shell: bash -euxo pipefail {0}
-        run: docker compose -f compose.yml down --remove-orphans || true
+        run: docker compose -f docker-compose.yml down --remove-orphans || true
 
       # Build & deploy Docker containers
       - name: Build & Deploy Docker containers
         shell: bash -euxo pipefail {0}
         run: |
           echo "::group::docker compose build (web)"
-          docker compose -f compose.yml build --no-cache --progress=plain web
+          docker compose -f docker-compose.yml build --no-cache --progress=plain web
           echo "::endgroup::"
 
           echo "::group::docker compose up (web)"
-          docker compose -f compose.yml up -d web
+          docker compose -f docker-compose.yml up -d web
           echo "::endgroup::"
