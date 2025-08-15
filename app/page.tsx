@@ -1,5 +1,7 @@
 'use client';
 
+import React from "react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import TestGif from './test-gif';
 import BouncingText from "./components/BouncingText";
@@ -187,8 +189,17 @@ export default function LandingPage() {
                   {/* Profile rail */}
                   <div className="border-2 border-foreground bg-card shadow-brutal p-4 rounded-sm">
                     <div className="flex items-center gap-3">
-                      <div className="w-14 h-14 rounded-full ring-4 ring-accent overflow-hidden">
-                        <img src="/avatar.jpg" alt="You" className="w-full h-full object-cover" />
+                      <div className="w-14 h-14 rounded-full ring-4 ring-accent overflow-hidden bg-[#ddd]">
+                        <Image
+                          src="/avatar.jpg"
+                          alt="You"
+                          width={56}
+                          height={56}
+                          className="w-full h-full object-cover"
+                          placeholder="blur"
+                          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNTYnIGhlaWdodD0nNTYnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzU2JyBoZWlnaHQ9JzU2JyBmaWxsPScjZGRkJy8+PC9zdmc+"
+                          priority
+                        />
                       </div>
                       <div>
                         <div className="font-bold">Your Name</div>

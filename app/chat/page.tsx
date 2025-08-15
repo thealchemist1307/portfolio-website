@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { Space_Grotesk } from "next/font/google";
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], weight: ["400", "600", "700"] });
 import Button from "@/components/ui/button";
@@ -22,7 +23,7 @@ const safeRandomId = () => {
   try {
     const uuid = (globalThis as any)?.crypto?.randomUUID?.();
     if (uuid) return uuid as string;
-  } catch {}
+  } catch { }
   // RFC4122-ish fallback (not crypto-strong)
   const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
   return `${Date.now().toString(16)}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
@@ -39,6 +40,7 @@ export default function ChatPage() {
       return next;
     });
   }, []);
+
 
 
   // Compute bottom offset from composer height so chips sit above the textbox
@@ -127,9 +129,9 @@ export default function ChatPage() {
       const mq = window.matchMedia('(max-width: 767px)');
       if (mq.matches && !hasClosedProfileOnceRef.current) {
         hasClosedProfileOnceRef.current = true;
-        try { setShowCue(true); } catch {}
+        try { setShowCue(true); } catch { }
         const t = setTimeout(() => {
-          try { setShowCue(false); } catch {}
+          try { setShowCue(false); } catch { }
         }, 3000);
         return () => clearTimeout(t);
       }
@@ -298,7 +300,7 @@ export default function ChatPage() {
       "Did you know? Nishit Chouhan runs his LLM locally. If there's any latency, thanks for your patience.";
     setMessages((prev) => [
       ...prev,
-      { id: loaderId, role: "assistant", content: `⏳ ${friendlyNotice}` , streaming: true},
+      { id: loaderId, role: "assistant", content: `⏳ ${friendlyNotice}`, streaming: true },
     ]);
 
     let answerText = "";
@@ -348,8 +350,8 @@ export default function ChatPage() {
 
     const finish = () => {
       // Cleanup timers and remove cursor, unset streaming
-      try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch {}
-      try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch {}
+      try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch { }
+      try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch { }
       const finalText = answerText;
       setMessages((prev) => prev.map((m) => (
         m.id === loaderId ? { ...m, content: finalText, streaming: false } : m
@@ -524,14 +526,19 @@ export default function ChatPage() {
           style={{ backgroundColor: '#D7FF3C' }}>
           <div className="flex flex-col items-center text-center">
             <div className="mb-3 p-1 border-2 border-foreground bg-background shadow-brutal rounded-sm">
-              <img
+              <Image
                 src="/profile_image_1.png"
                 alt="Profile"
+                width={112}
+                height={112}
                 className="size-28 rounded-sm object-cover [image-rendering:pixelated] cursor-pointer"
+                placeholder="blur"
+                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTEyJyBoZWlnaHQ9JDExMicgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48cmVjdCB3aWR0aD0nMTEyJyBoZWlnaHQ9JzExMicgZmlsbD0nI0ZGRkZGRicvPjwvc3ZnPg=="
+                priority
+                onClick={() => setPhotoOpen(true)}
                 role="button"
                 aria-label="Open profile photo"
                 tabIndex={0}
-                onClick={() => setPhotoOpen(true)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPhotoOpen(true); } }}
               />
             </div>
@@ -611,7 +618,7 @@ export default function ChatPage() {
                 className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal"
                 aria-label="Download CV"
               >
-                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 <span className="text-xs">Download CV</span>
               </a>
             </div>
@@ -661,11 +668,11 @@ export default function ChatPage() {
                       controllerRef.current.abort();
                       controllerRef.current = null;
                     }
-                  } catch {}
+                  } catch { }
                   // Clear any running timers
-                  try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch {}
-                  try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch {}
-                  try { if (watcherRef.current != null) { clearInterval(watcherRef.current); watcherRef.current = null; } } catch {}
+                  try { if (typingTimerRef.current != null) { clearInterval(typingTimerRef.current); typingTimerRef.current = null; } } catch { }
+                  try { if (blinkTimerRef.current != null) { clearInterval(blinkTimerRef.current); blinkTimerRef.current = null; } } catch { }
+                  try { if (watcherRef.current != null) { clearInterval(watcherRef.current); watcherRef.current = null; } } catch { }
                   setMessages([{ id: "m1", role: "assistant", content: "Hi! How can I help you today?" }]);
                   setSuggestions([
                     "Show my top projects",
@@ -844,8 +851,8 @@ export default function ChatPage() {
                   aria-expanded={isOpen(i)}
                   aria-controls={`project-meta-${i}`}
                   className={`project-card nb-card focus-brutal ${isOpen(i) ? 'nb-card-open' : ''} border-2 border-foreground p-1 shadow-brutal rounded-sm bg-card overflow-visible flex-shrink-0 focus-within:outline-none`}
-                  onMouseEnter={() => open(i)}
-                  onMouseLeave={() => close(i)}
+                  onMouseEnter={() => { if (!isTouch) open(i); }}
+                  onMouseLeave={() => { if (!isTouch) close(i); }}
                   onFocus={() => open(i)}
                   onBlur={() => close(i)}
                   onClick={() => {
@@ -978,21 +985,25 @@ export default function ChatPage() {
             {/* Reuse the same profile content */}
             <div className="flex flex-col items-center text-center">
               <div className="mb-3 p-1 border-2 border-foreground bg-background shadow-brutal rounded-sm">
-                <img
+                <Image
                   src="/profile_image_1.png"
                   alt="Profile"
+                  width={112}
+                  height={112}
                   className="size-28 rounded-sm object-cover [image-rendering:pixelated] cursor-pointer"
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTEyJyBoZWlnaHQ9JDExMicgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48cmVjdCB3aWR0aD0nMTEyJyBoZWlnaHQ9JzExMicgZmlsbD0nI0ZGRkZGRicvPjwvc3ZnPg=="
+                  onClick={() => setPhotoOpen(true)}
                   role="button"
                   aria-label="Open profile photo"
                   tabIndex={0}
-                  onClick={() => setPhotoOpen(true)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPhotoOpen(true); } }}
                 />
               </div>
               <h2 className="text-lg font-extrabold tracking-tight">Nishit Chouhan</h2>
               <p className="text-xs text-foreground/80 font-mono">@TheAlchemist1307</p>
               <p className="text-[11px] text-foreground/80 font-mono">
-                <a href="mailto:nishitchouhan@shauqtechnology.com" className="underline-offset-2 hover:underline">nishitchouhan@shauqtechnology.com</a>
+                <a href="mailto:nishitrchouhan@gmail.com" className="underline-offset-2 hover:underline">nishitrchouhan@gmail.com</a>
               </p>
               <div className="w-full mt-4">
                 <div className="border-2 border-foreground bg-card shadow-brutal rounded-sm px-2 py-1 text-left flex items-center justify-between">
@@ -1064,7 +1075,7 @@ export default function ChatPage() {
                     className="inline-flex items-center gap-2 border-2 border-foreground bg-background text-foreground shadow-brutal rounded-sm px-3 py-1.5 font-semibold uppercase tracking-wide hover:bg-secondary hover:text-secondary-foreground focus-brutal w-full justify-center"
                     aria-label="Download CV"
                   >
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v10m0 0l4-4m-4 4l-4-4M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     <span className="text-xs">Download CV</span>
                   </a>
                 </div>
