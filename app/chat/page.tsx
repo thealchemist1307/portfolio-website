@@ -18,6 +18,9 @@ type Message = {
   streaming?: boolean; // indicates message is currently being streamed
 };
 
+const profileBlurDataUrl =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTEyJyBoZWlnaHQ9JDExMicgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48cmVjdCB3aWR0aD0nMTEyJyBoZWlnaHQ9JzExMicgZmlsbD0nI0ZGRkZGRicvPjwvc3ZnPg==";
+
 // Safe ID generator for environments where crypto.randomUUID is unavailable
 const safeRandomId = () => {
   try {
@@ -312,11 +315,19 @@ export default function ChatPage() {
       const controller = new AbortController();
       controllerRef.current = controller;
       setIsAsking(true);
-      const headers: Record<string, string> = { "Content-Type": "application/json", "Accept": "application/json" };
-      const res = await fetch("/api/ask", {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "x-api-key": "sk-yY5Rk3lyKvjj7y4koWJuBvjJCed_WsOF-3gHlZJAq9c",
+      };
+      const res = await fetch("http://localhost:7860/api/v1/run/9df146c3-3f7d-4259-8ed9-6355b6da25c7", {
         method: "POST",
         headers,
-        body: JSON.stringify({ question, k: 6 }),
+        body: JSON.stringify({
+          input_value: question,
+          input_type: "chat",
+          output_type: "chat",
+        }),
         signal: controller.signal,
       });
 
@@ -331,8 +342,9 @@ export default function ChatPage() {
         const contentType = res.headers.get("content-type") || "";
         if (contentType.includes("application/json")) {
           const data = await res.json();
+          const messageText = data?.outputs?.[0]?.outputs?.[0]?.results?.message?.text;
           answerText =
-            data?.answer ?? data?.text ?? data?.response ?? data?.message ?? JSON.stringify(data);
+            messageText ?? data?.answer ?? data?.text ?? data?.response ?? data?.message ?? JSON.stringify(data);
         } else {
           answerText = await res.text();
         }
@@ -536,7 +548,7 @@ export default function ChatPage() {
                 height={112}
                 className="size-28 rounded-sm object-cover [image-rendering:pixelated] cursor-pointer"
                 placeholder="blur"
-                blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTEyJyBoZWlnaHQ9JDExMicgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48cmVjdCB3aWR0aD0nMTEyJyBoZWlnaHQ9JzExMicgZmlsbD0nI0ZGRkZGRicvPjwvc3ZnPg=="
+                blurDataURL={profileBlurDataUrl}
                 priority
                 onClick={() => setPhotoOpen(true)}
                 role="button"
@@ -1023,7 +1035,7 @@ export default function ChatPage() {
                   height={112}
                   className="size-28 rounded-sm object-cover [image-rendering:pixelated] cursor-pointer"
                   placeholder="blur"
-                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTEyJyBoZWlnaHQ9JDExMicgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJz48cmVjdCB3aWR0aD0nMTEyJyBoZWlnaHQ9JzExMicgZmlsbD0nI0ZGRkZGRicvPjwvc3ZnPg=="
+                  blurDataURL={profileBlurDataUrl}
                   onClick={() => setPhotoOpen(true)}
                   role="button"
                   aria-label="Open profile photo"
@@ -1132,10 +1144,15 @@ export default function ChatPage() {
         <DialogOverlay />
         <DialogContent>
           <div className="relative border-2 border-foreground bg-primary shadow-brutal rounded-sm p-2 max-w-[min(92vw,700px)] max-h-[90vh] flex items-center justify-center">
-            <img
+            <Image
               src="/profile_image_1.png"
               alt="Profile enlarged"
+              width={700}
+              height={700}
               className="max-w-full max-h-[82vh] object-contain"
+              placeholder="blur"
+              blurDataURL={profileBlurDataUrl}
+              sizes="(max-width: 768px) 92vw, 700px"
             />
             <div className="absolute top-3 right-3 md:top-4 md:right-4">
               <DialogClose aria-label="Close image" className="p-0 m-0 bg-transparent border-0 shadow-none inline-flex">
