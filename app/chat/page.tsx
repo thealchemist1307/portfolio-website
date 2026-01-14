@@ -377,10 +377,10 @@ export default function ChatPage() {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         Accept: "application/json",
-        "x-api-key": "sk-yY5Rk3lyKvjj7y4koWJuBvjJCed_WsOF-3gHlZJAq9c",
+        "x-api-key": "sk-Im5vIkqdAHygZiCzvuKOnH__prr5a-Ey3Y6mQcYQ06s",
       };
       const res = await fetch(
-        "http://localhost:7860/api/v1/run/9df146c3-3f7d-4259-8ed9-6355b6da25c7",
+        "http://localhost:7860/api/v1/run/4a080ee8-f8c8-4042-8f4a-6af174999bb9",
         {
           method: "POST",
           headers,
